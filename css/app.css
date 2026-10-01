@@ -1,0 +1,1371 @@
+  /* =========================================================================
+     Wattfolio — Gestaltungsgrundlage
+     Schritt 1: Tokens (Typografie, Abstände, Radien, Farben)
+     Schritt 2: alle bisherigen Rohwerte auf diese Tokens umgestellt
+     Regeln: 6 Schriftgrade · 7 Abstandsstufen (4-px-Raster) · 3 Radien ·
+             2 Erhebungsstufen · keine Hex-Farbe außerhalb von :root
+     Ausnahmen sind an der Fundstelle als „Ausnahme:" kommentiert.
+     Generelle Ausnahme (einmal hier begründet, nicht an jeder Fundstelle):
+       · Innenhöhen von 1–2 px an Pillen, Marken, Tabellen-Zellen und Punkt-Listen.
+         Der 4-px-Raster gilt für Karten, Abschnitte, Formularzeilen und Spalten;
+         eine Pille mit 4 px Innenhöhe wäre 8 px höher und würde die Zeilendichte
+         der Tabellen (50 Flurstücke überfliegbar) messbar verschlechtern.
+       · Balkenenden und Legendenmarken unter 6 px Kantenlänge (Radius 2 px):
+         --r-sm auf einem 3-px-Balken ergibt keine sichtbare Rundung.
+       · Glyphengrößen (× und ›) sind keine Textgrade und folgen der Ikonometrie.
+     ========================================================================= */
+  :root{
+    /* ---- Typografie: sechs Stufen, Hierarchie sonst über Gewicht und Farbe ---- */
+    --fs-xs:11px;    /* Meta, Tabellenköpfe, Pills, Zähler */
+    --fs-sm:12px;    /* Beschriftungen, Tabelleninhalte, dichte UI */
+    --fs-base:13px;  /* Fließtext, Eingabefelder */
+    --fs-md:15px;    /* Kartenüberschriften, Abschnittstitel */
+    --fs-lg:19px;    /* Seiten- und Bereichstitel */
+    --fs-xl:26px;    /* Kennzahlen */
+    --lh-tight:1.35; /* Tabellen, Zeilen, Pills */
+    --lh-text:1.55;  /* Fließtext, Hinweise */
+
+    /* ---- Abstände: 4-px-Raster ---- */
+    --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px; --sp-7:48px;
+    /* Feste Bemessungen (keine Abstände, daher außerhalb des Rasters): */
+    --nav-w:236px;      /* Projektnavigation; „Genehmigungsplanung" passt bei 12px/700 */
+    --header-h:52px;
+
+    /* ---- Radien: drei ---- */
+    --r-sm:6px;      /* Eingabefelder, Schaltflächen, Zellen, kleine Marken */
+    --r-md:10px;     /* Karten, Aufklapper, Overlays */
+    --r-full:999px;  /* Pills und runde Marken */
+    --radius:var(--r-md); /* Alt-Name, bleibt gültig */
+
+    /* ---- Erhebung: zwei Stufen. Die Anwendung ist flächig — Tiefe nur dort,
+       wo etwas wirklich über dem Inhalt liegt (Menüs, Popover, Overlays). ---- */
+    --elev-1:0 1px 2px rgba(22,42,30,.06);
+    --elev-2:0 10px 30px rgba(22,42,30,.16);
+    --shadow:var(--elev-1); /* Alt-Name, bleibt gültig */
+
+    /* ---- Flächen und Linien ---- */
+    --bg:#f2f4f1; --panel:#ffffff; --panel2:#f4f7f4; --inner:#ffffff;
+    --border:#e4e8e1;        /* Trennlinien, Kartenrand (dekorativ) */
+    --border-strong:#cfd6cd; /* Abgrenzung von Flächen */
+    --line:#c1cabf;          /* Tabellengitter */
+    --field-border:#828b83;  /* Eingabefelder/Bedienelemente: 3,5:1 auf Weiß, 3,3:1 auf --panel2 */
+    --th-bg:#ecefe9;         /* Tabellenkopf */
+    --zebra:#f8faf7;         /* Zebrastreifen */
+    --row-hover:#eef3ee;
+
+    /* ---- Text ---- */
+    --text:#1b2420;          /* 14,4:1 auf Weiß */
+    --muted:#4f5a54;         /* 7,6:1 auf Weiß, 7,1:1 auf --panel2 */
+    --placeholder:#79837c;   /* 4,3:1 auf Weiß — Platzhalter, kein Inhalt */
+
+    /* ---- Akzent = „hier kann man etwas tun" ---- */
+    --accent:#0e9d6e; --accent2:#0b8159; --accent-soft:#e7f5ee;
+    --accent-line:rgba(14,157,110,.22); --accent-ink:#0a6647;
+    --on-accent:#ffffff;
+    --focus:#0b8159;
+
+    /* ---- Status = „so steht es" — bewusst von --accent getrennt, damit
+       „erledigt" nicht wie ein Bedienelement aussieht. ---- */
+    --ok:#3f7d24;   --ok-soft:#eef4e3;  --ok-line:#cfe0b9;  --ok-ink:#356a1e;
+    --warn:#d0821f; --warn-soft:#fbeedb; --warn-line:#f0d6ab; --warn-ink:#8a5411;
+    --err:#c8453f;  --err-soft:#fbe8e6; --err-line:#eccac8;  --err-ink:#a2352f;
+
+    /* ---- Bereichsfarben (inhaltlich belegt, in Helligkeit harmonisiert) ---- */
+    --area-uebersicht:var(--accent);
+    --area-grund:#2f7dd1;    --area-grund-ink:#25659f;
+    --area-genehm:#a8762c;   --area-genehm-ink:#7f5720;
+    --area-netz:#7c5cbf;     --area-netz-ink:#5f4496;
+    --area-technik:#5b6b7a;  --area-technik-ink:#4a5865;
+    --area-termine:#128b8b;  --area-termine-ink:#0d6d6d;
+    --area-kosten:#a34d6d;   --area-kosten-ink:#853a56;
+
+    /* ---- Marke ---- */
+    --brand-1:#134a54; --brand-2:#0d3b42; --brand-shadow:rgba(13,59,66,.34);
+    /* ---- Sonderfarben Karte/Gantt ---- */
+    --phase-soft:#e9edfb; --phase-ink:#3b4fae;
+    --warn-2:#b96f16;                       /* Streifenmuster „läuft" */
+    --label-bg:rgba(255,212,59,.95); --label-border:#c79a06; --label-ink:#3a2c00;
+    --scrim:rgba(20,26,23,.42);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow:hidden;
+    display:flex;flex-direction:column;font-size:var(--fs-base);line-height:var(--lh-tight)}
+  a{color:var(--accent2);text-decoration:none}
+  a:hover{color:var(--accent-ink);text-decoration:underline}
+
+  /* Durchgehender Fokusring auf allem, was mit der Tastatur erreichbar ist. */
+  a:focus-visible,button:focus-visible,summary:focus-visible,
+  input:focus-visible,select:focus-visible,textarea:focus-visible,
+  [tabindex]:focus-visible,[contenteditable]:focus-visible{
+    outline:2px solid var(--focus);outline-offset:2px}
+
+  /* ---- App-Header: feste Kopfleiste mit Navigation, darunter die Views als Body ---- */
+  #app-header{flex:none;height:var(--header-h);display:flex;align-items:center;gap:var(--sp-1);
+    padding:0 var(--sp-4);background:var(--panel);border-bottom:1px solid var(--border);position:relative;z-index:500}
+  #app-header .brand{display:flex;align-items:center;gap:var(--sp-2);cursor:pointer;margin-right:var(--sp-4);user-select:none}
+  #app-header .brand .brand-mark{width:28px;height:28px;border-radius:var(--r-sm);padding:var(--sp-1)}
+  #app-header .brand h1{margin:0;font-size:var(--fs-md);font-weight:800;letter-spacing:-.01em}
+  .nav-item{display:flex;align-items:center;gap:var(--sp-1);padding:var(--sp-1) var(--sp-3);border-radius:var(--r-sm);
+    font-size:var(--fs-sm);font-weight:700;color:var(--muted);cursor:pointer;user-select:none;
+    border:1px solid transparent;transition:background .12s,color .12s,border-color .12s;white-space:nowrap}
+  .nav-item:hover{color:var(--text);background:var(--panel2)}
+  .nav-item.active{color:var(--accent-ink);background:var(--accent-soft);border-color:var(--accent-line)}
+  /* ---- Projekt-Tabs: mehrere geöffnete Projekte gleichzeitig ---- */
+  #project-tabs{display:flex;align-items:center;gap:var(--sp-1);margin-left:var(--sp-2);min-width:0;flex:0 1 auto;
+    overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+  #project-tabs:not(:empty){padding-left:var(--sp-3);border-left:1px solid var(--border)}
+  .proj-tab{display:flex;align-items:center;gap:var(--sp-1);flex:0 1 190px;min-width:150px;max-width:190px;
+    padding:var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3);
+    border-radius:var(--r-sm);font-size:var(--fs-sm);font-weight:700;color:var(--muted);cursor:pointer;user-select:none;
+    border:1px solid transparent;transition:background .12s,color .12s,border-color .12s}
+  .proj-tab:hover{color:var(--text);background:var(--panel2)}
+  .proj-tab.active{color:var(--accent-ink);background:var(--accent-soft);border-color:var(--accent-line)}
+  .proj-tab-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+  .proj-tab-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
+  .proj-tab-close{flex:none;border:none;background:none;color:var(--muted);cursor:pointer;
+    font-size:16px; /* Ausnahme: Glyphengröße des ×, kein Textgrad */
+    line-height:1;width:18px;height:18px;border-radius:var(--r-sm);display:grid;place-items:center;padding:0}
+  .proj-tab-close:hover{background:var(--border);color:var(--err)}
+  .proj-tab[hidden]{display:none}
+  .proj-tab-more{flex:none;width:auto;margin:0;padding:var(--sp-1) var(--sp-2);font-size:var(--fs-sm);font-weight:700;
+    color:var(--muted);background:var(--panel);border:1px solid var(--border);cursor:pointer}
+  #app-header .spacer{flex:1}
+  #app-header button{margin:0;white-space:nowrap}
+  @media(max-width:700px){ #app-header{padding:0 var(--sp-2)} .proj-tab{max-width:130px} #app-header .brand h1{display:none} }
+
+  /* ---- Hinweis in der öffentlichen Demo (html.pa-demo, gesetzt in projektanfragen.html) ---- */
+  .demo-hinweis{display:none;align-items:center;margin-right:var(--sp-2);padding:2px var(--sp-2);border-radius:var(--r-full);
+    background:var(--warn-soft);border:1px solid var(--warn-line);color:var(--warn-ink);font-size:var(--fs-xs);font-weight:700;white-space:nowrap}
+  html.pa-demo .demo-hinweis{display:inline-flex}
+  @media(max-width:1100px){ html.pa-demo .demo-hinweis{font-size:0;padding:2px var(--sp-1)} html.pa-demo .demo-hinweis::before{content:'Demo';font-size:var(--fs-xs)} }
+
+  /* ---- Benachrichtigungsglocke: Knopf mit Zähler + Panel ---- */
+  .glocke{position:relative;flex:none}
+  .glocke-btn{position:relative;width:34px;height:34px;padding:0;display:grid;place-items:center;border-radius:50%;
+    background:none;border:1px solid transparent;color:var(--muted);box-shadow:none}
+  .glocke-btn:hover,.glocke-btn[aria-expanded="true"]{background:var(--panel2);color:var(--text);border-color:var(--border)}
+  .glocke-badge{position:absolute;top:1px;right:0;min-width:16px;height:16px;padding:0 4px;border-radius:var(--r-full);
+    background:var(--err);color:var(--on-accent);font-size:10px;font-weight:800;line-height:16px;text-align:center;
+    box-shadow:0 0 0 2px var(--panel);font-variant-numeric:tabular-nums} /* Ausnahme: 10px Ziffer im 16-px-Zähler */
+  .glocke-badge.nur-faellig{background:var(--warn)}
+  .glocke-panel{position:absolute;top:calc(100% + var(--sp-2));right:0;z-index:600;width:380px;max-width:calc(100vw - 24px);
+    max-height:min(75vh,620px);display:flex;flex-direction:column;background:var(--panel);
+    border:1px solid var(--border-strong);border-radius:var(--r-md);box-shadow:var(--elev-2);overflow:hidden}
+  .glocke-kopf{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);
+    border-bottom:1px solid var(--border)}
+  .glocke-kopf strong{font-size:var(--fs-md);font-weight:800}
+  .glocke-kopf .linklike{font-size:var(--fs-xs)}
+  .glocke-liste{overflow-y:auto;padding:var(--sp-1) 0}
+  .glocke-abschnitt{margin-top:var(--sp-2);padding:var(--sp-2) var(--sp-4) var(--sp-1);border-top:1px solid var(--border);
+    font-size:var(--fs-xs);font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .glocke-sub{padding:var(--sp-2) var(--sp-4) 2px;font-size:var(--fs-xs);font-weight:700;color:var(--muted)}
+  .glocke-item{display:flex;align-items:flex-start;gap:var(--sp-3);width:100%;margin:0;padding:var(--sp-2) var(--sp-4);
+    background:none;border:0;border-radius:0;box-shadow:none;color:var(--text);font-size:var(--fs-sm);font-weight:500;
+    text-align:left;line-height:var(--lh-tight)}
+  .glocke-item:hover,.glocke-item:focus-visible{background:var(--row-hover);color:var(--text);outline:none}
+  .glocke-item.ungelesen{background:var(--accent-soft)}
+  .glocke-item.ungelesen:hover{background:color-mix(in srgb, var(--accent) 14%, var(--panel))}
+  /* Das Panel liegt im Header: dessen Regel `#app-header button{white-space:nowrap}` hier aufheben */
+  #app-header .glocke-panel,#app-header .glocke-item{white-space:normal}
+  .glocke-item .pill{flex:none;margin-top:1px;white-space:nowrap}
+  .glocke-avatar{width:30px;height:30px;font-size:var(--fs-xs);margin-top:1px}
+  .glocke-icon{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+    background:var(--panel2);border:1px solid var(--border);font-size:var(--fs-sm);color:var(--muted)}
+  .glocke-icon.aufgabe{color:var(--accent-ink);background:var(--accent-soft);border-color:var(--accent-line);font-weight:800}
+  .glocke-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .glocke-text b{font-weight:700;overflow-wrap:anywhere}
+  .glocke-item:not(.ungelesen) .glocke-text b{font-weight:600}
+  .glocke-titel{color:var(--text);overflow-wrap:anywhere}
+  .glocke-meta{font-size:var(--fs-xs);color:var(--muted);overflow-wrap:anywhere}
+  .glocke-punkt{flex:none;width:8px;height:8px;margin-top:var(--sp-2);border-radius:50%;background:var(--accent)}
+  .glocke-leer{padding:var(--sp-3) var(--sp-4);font-size:var(--fs-sm);color:var(--muted);line-height:var(--lh-text)}
+  /* Sprungziel aus der Glocke kurz hervorheben */
+  .task-table tr.glocke-ziel>td{background:var(--warn-soft) !important;transition:background .4s}
+
+  /* ---- Profil-Menü: Avatar oben rechts + Dropdown ---- */
+  .avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;
+    background:linear-gradient(150deg,var(--brand-1),var(--brand-2));color:var(--on-accent);font-weight:800;
+    overflow:hidden;flex:none;user-select:none;letter-spacing:0}
+  .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+  .profile-menu{position:relative;flex:none}
+  .avatar-btn{width:32px;height:32px;border-radius:50%;padding:0;border:none;background:none;
+    box-shadow:none;display:grid;place-items:center;cursor:pointer}
+  .avatar-btn .avatar{width:32px;height:32px;font-size:var(--fs-sm)}
+  .avatar-btn:hover{filter:brightness(1.08)}
+  .avatar-lg{width:52px;height:52px;font-size:var(--fs-lg)}
+  .profile-dropdown{position:absolute;top:calc(100% + var(--sp-2));right:0;z-index:600;width:270px;
+    background:var(--panel);border:1px solid var(--border-strong);border-radius:var(--r-md);
+    box-shadow:var(--elev-2);padding:var(--sp-4)}
+  .profile-dropdown.hidden{display:none}
+  .profile-head{display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-3)}
+  .profile-head-info{min-width:0}
+  .profile-name{font-weight:800;font-size:var(--fs-base);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .profile-email{color:var(--muted);font-size:var(--fs-xs);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .profile-dropdown label{margin-top:0}
+  .profile-dropdown .btn-row{margin:0 0 var(--sp-3)}
+  .profile-dropdown .btn-row button{flex:1}
+  .profile-dropdown #btn-logout{width:100%}
+  .profile-avatar-wrap{position:relative;flex:none}
+  .profile-avatar-wrap .avatar-edit-hint{position:absolute;inset:0;border-radius:50%;
+    display:grid;place-items:center;background:rgba(11,20,17,.45);color:var(--on-accent);font-size:var(--fs-xs);
+    font-weight:700;opacity:0;transition:opacity .15s;cursor:pointer;text-align:center;line-height:1.2}
+  .profile-avatar-wrap:hover .avatar-edit-hint{opacity:1}
+
+  #app{display:grid;grid-template-columns:minmax(380px,402px) 1fr;height:100vh;overflow:hidden}
+  @media(max-width:900px){ #app{grid-template-columns:1fr;grid-template-rows:1fr 1fr} }
+
+  /* ---- Sidebar ---- */
+  #sidebar{background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+  #sidebar header{padding:var(--sp-4) var(--sp-4) var(--sp-3);display:flex;align-items:center;gap:var(--sp-3)}
+  /* Wattfolio-Logo („Bolt Stack"): versetzte Blitz-Schichten auf Petrol-Kachel,
+     mittlere Schicht in Volt-Gelb. SVG skaliert mit der Kachelgröße. */
+  .brand-mark{width:38px;height:38px;border-radius:var(--r-md);flex:none;
+    background:linear-gradient(150deg,var(--brand-1),var(--brand-2));
+    display:grid;place-items:center;padding:var(--sp-1);
+    box-shadow:0 2px 8px var(--brand-shadow)}
+  .brand-mark svg{width:100%;height:100%;display:block}
+  .brand-text h1{margin:0;font-size:var(--fs-md);font-weight:800;letter-spacing:-.01em}
+  .brand-text p{margin:2px 0 0;color:var(--muted);font-size:var(--fs-xs);font-weight:500}
+
+  .tabs{display:flex;gap:var(--sp-1);padding:var(--sp-1);margin:0 var(--sp-4) var(--sp-2);background:var(--panel2);
+    border:1px solid var(--border);border-radius:var(--r-md)}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:var(--sp-1);padding:var(--sp-2) var(--sp-1);
+    border-radius:var(--r-sm);cursor:pointer;font-size:var(--fs-xs);font-weight:700;color:var(--muted);
+    border:1px solid transparent;transition:background .15s,color .15s,border-color .15s;user-select:none}
+  .tab:hover{color:var(--text)}
+  .tab .num{width:20px;height:20px;border-radius:50%;background:var(--panel);border:1px solid var(--border-strong);
+    display:grid;place-items:center;font-size:var(--fs-xs);font-weight:800;color:var(--muted);
+    font-variant-numeric:tabular-nums;transition:background .15s,color .15s,border-color .15s}
+  .tab.active{background:var(--panel);color:var(--text);border-color:var(--border-strong)}
+  .tab.active .num{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+  /* Sub-Tabs: bewusst leichtgewichtiger als .tab/.detail-tab (Unterstrich statt Pille,
+     keine Nummern-Badges), damit die hierarchische Unterordnung unter den Haupt-Reiter
+     auf den ersten Blick erkennbar ist. */
+  .sub-tabs{display:flex;gap:var(--sp-5);padding:0;margin:0 0 var(--sp-4);border-bottom:1px solid var(--border)}
+  /* Ab 1025px navigiert die Sidebar (Unterpunkte dort) — zwei Reiterleisten übereinander wären
+     redundant. Darunter liegt die Sidebar als Leiste oben und zeigt keine Unterpunkte. */
+  @media(min-width:1025px){ .sub-tabs{display:none} }
+  .sub-tab{flex:none;padding:var(--sp-2) 0;font-size:var(--fs-sm);font-weight:700;color:var(--muted);
+    cursor:pointer;user-select:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s}
+  .sub-tab:hover{color:var(--text)}
+  .sub-tab.active{color:var(--accent2);border-bottom-color:var(--accent)}
+
+  /* ---- Bereichs-Farbcodierung je Haupt-Reiter: gleiche Akzentfarbe in der
+     Navigation, im Sub-Tab-Unterstrich, in der Abschnitts-Überschrift und als
+     schmaler linker Streifen an den Karten des Reiters. */
+  #dpane-uebersicht{--tab-accent:var(--accent)}
+  #dpane-prozess{--tab-accent:var(--accent)}
+  #dpane-grundstueck{--tab-accent:var(--area-grund);--tab-ink:var(--area-grund-ink)}
+  #dpane-genehmigung{--tab-accent:var(--area-genehm);--tab-ink:var(--area-genehm-ink)}
+  #dpane-netz{--tab-accent:var(--area-netz);--tab-ink:var(--area-netz-ink)}
+  #dpane-technik{--tab-accent:var(--area-technik);--tab-ink:var(--area-technik-ink)}
+  #dpane-termine{--tab-accent:var(--area-termine);--tab-ink:var(--area-termine-ink)}
+  #dpane-kosten{--tab-accent:var(--area-kosten);--tab-ink:var(--area-kosten-ink)}
+  /* 2px statt 3px: die Bereichszugehörigkeit bleibt lesbar, der Kasten-Charakter
+     tritt zurück. Die Farbe trägt zusätzlich die Abschnitts-Überschrift. */
+  .detail-pane .info{border-left:2px solid var(--tab-accent)}
+  #dpane-grundstueck .sub-tab.active{color:var(--area-grund-ink);border-bottom-color:var(--area-grund)}
+
+  /* Eyebrow-Überschrift, um mehrere Karten innerhalb eines Reiters zu Abschnitten zu
+     gruppieren (z.B. "Verfahren" vs. "Kommunikation" in Genehmigungsplanung). */
+  .section-label{font-size:var(--fs-xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--tab-ink,var(--accent-ink));margin:var(--sp-5) 0 var(--sp-3);padding-top:var(--sp-4);
+    border-top:1px solid var(--border)}
+  .section-label:first-child{margin-top:0;padding-top:0;border-top:none}
+  .doku-phase-label{font-size:var(--fs-xs);font-weight:800;letter-spacing:.04em;color:var(--muted);
+    text-transform:uppercase;margin:var(--sp-3) 0 var(--sp-1)}
+  .doku-phase-label:first-child{margin-top:0}
+  .doku-files{display:flex;flex-wrap:wrap;gap:var(--sp-1);margin-top:var(--sp-1)}
+  .doku-file{display:inline-flex;align-items:center;gap:var(--sp-1);max-width:100%;
+    background:var(--chip-bg,var(--panel2));border:1px solid var(--border);
+    border-radius:var(--r-full);padding:2px var(--sp-1) 2px var(--sp-2);font-size:var(--fs-xs);line-height:var(--lh-tight)}
+  .doku-file a{color:var(--accent2);text-decoration:none;font-weight:600;
+    max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .doku-file a:hover{text-decoration:underline}
+  .doku-file-size{color:var(--muted);font-size:var(--fs-xs);font-variant-numeric:tabular-nums}
+  .doku-file-x{border:none;background:none;color:var(--muted);cursor:pointer;
+    font-size:15px; /* Ausnahme: Glyphengröße des × */
+    line-height:1;padding:0 var(--sp-1);border-radius:var(--r-full)}
+  .doku-file-x:hover{color:var(--err)}
+  .doku-attach{white-space:nowrap}
+  /* Kompakte Datei-Zelle in den Aufgaben-Tabellen: Zähler-Chip, Liste erst als Popover */
+  .file-cell{display:flex;align-items:center;gap:var(--sp-1);white-space:nowrap}
+  .file-cell .task-attach{margin:0}
+  .doku-filelist{position:relative;display:inline-block;background:none;border:none;margin:0;padding:0;
+    overflow:visible} /* überschreibt das generische details{overflow:hidden}, sonst wird das Popover geclippt */
+  .doku-filelist>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:var(--sp-1);
+    padding:2px var(--sp-2);border:1px solid var(--field-border);border-radius:var(--r-sm);background:var(--panel);
+    font-size:var(--fs-xs);font-weight:700;color:var(--text);user-select:none}
+  .doku-filelist>summary::-webkit-details-marker{display:none}
+  .doku-filelist>summary:hover{border-color:var(--accent)}
+  .doku-filelist[open]>summary{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink)}
+  .doku-filelist-pop{position:absolute;right:0;top:calc(100% + var(--sp-1));z-index:60;min-width:230px;max-width:320px;
+    background:var(--panel);border:1px solid var(--border-strong);border-radius:var(--r-md);
+    box-shadow:var(--elev-2);padding:var(--sp-1)}
+  .doku-file-row{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-1) var(--sp-2);
+    border-radius:var(--r-sm);font-size:var(--fs-sm)}
+  .doku-file-row:hover{background:var(--panel2)}
+  .doku-file-row a{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    color:var(--accent2);font-weight:600;text-decoration:none}
+  .doku-file-row a:hover{text-decoration:underline}
+
+  /* ---- Detail page (Projektübersicht) ----
+     Die Projektnavigation steht links als Sidebar statt oben als Reiterleiste: bei sieben
+     Bereichen mit teils langen Namen ("Genehmigungsplanung") war die horizontale Leiste
+     schon bei mittlerer Fensterbreite am Scrollen, und der Reihenfolge-Charakter des
+     Prozesses ("erst Grundstück, dann Genehmigung") war nicht ablesbar. */
+  #view-detail{overflow:hidden;display:flex;flex-direction:column}
+  .detail-shell{flex:1;min-height:0;display:flex;align-items:stretch}
+  .detail-main{flex:1;min-width:0;overflow-y:auto}
+
+  .detail-nav{flex:none;width:var(--nav-w);display:flex;flex-direction:column;gap:1px;
+    padding:var(--sp-3) var(--sp-2) var(--sp-5);border-right:1px solid var(--border);background:var(--panel);
+    overflow-y:auto;overscroll-behavior:contain}
+  .detail-nav-head{display:flex;gap:var(--sp-2);align-items:flex-start;margin-bottom:var(--sp-3)}
+  .detail-nav-head .detail-quickmap{width:42px}
+  .detail-nav-title{min-width:0;flex:1}
+  .detail-nav-title .pill{white-space:normal;line-height:var(--lh-tight);text-align:left}
+  .detail-nav-label{font-size:var(--fs-xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);margin:var(--sp-2) 0 var(--sp-1) var(--sp-2)}
+
+  .detail-tab{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2);border-radius:var(--r-sm);
+    cursor:pointer;font-size:var(--fs-sm);font-weight:700;color:var(--muted);border:1px solid transparent;
+    transition:background .13s,color .13s;user-select:none;position:relative}
+  .detail-tab:hover{background:var(--panel2);color:var(--text)}
+  .detail-tab .num{width:20px;height:20px;border-radius:50%;background:var(--panel2);
+    border:1px solid var(--border-strong);display:grid;place-items:center;font-size:var(--fs-xs);
+    font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;
+    transition:background .13s,color .13s,border-color .13s;flex:none}
+  .detail-tab .tab-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* Zähler-Marke: bewusst ohne Fläche und Rahmen — sie ist eine Zahl, keine Pille und
+     kein Bedienelement. So sind die drei Markentypen (Bereichsnummer / Status-Pille /
+     Zähler) auf den ersten Blick unterscheidbar. */
+  .detail-tab .tab-badge{flex:none;font-size:var(--fs-xs);font-weight:700;color:var(--muted);
+    background:none;border-radius:0;padding:0;min-width:18px;text-align:right;
+    font-variant-numeric:tabular-nums}
+  .detail-tab.active{background:var(--panel2);color:var(--text)}
+  .detail-tab.active .num{background:var(--tab-color,var(--accent));border-color:var(--tab-color,var(--accent));color:var(--on-accent)}
+  .detail-tab.active .tab-badge{background:none;color:var(--text)}
+  /* Linker Farbstreifen macht den aktiven Bereich auch bei schnellem Blick eindeutig. */
+  .detail-tab.active::before{content:'';position:absolute;left:0;top:var(--sp-1);bottom:var(--sp-1);width:3px;
+    border-radius:0 2px 2px 0;background:var(--tab-color,var(--accent))} /* Ausnahme: Balkenende, 3px breit */
+  .detail-tab[data-dtab="grundstueck"]{--tab-color:var(--area-grund)}
+  .detail-tab[data-dtab="genehmigung"]{--tab-color:var(--area-genehm)}
+  .detail-tab[data-dtab="netz"]{--tab-color:var(--area-netz)}
+  .detail-tab[data-dtab="technik"]{--tab-color:var(--area-technik)}
+  .detail-tab[data-dtab="termine"]{--tab-color:var(--area-termine)}
+  .detail-tab[data-dtab="kosten"]{--tab-color:var(--area-kosten)}
+
+  /* Unterpunkte: nur unter dem aktiven Bereich sichtbar, damit die Sidebar nicht zur
+     Volltextliste aller Unterseiten wird. */
+  .detail-subnav{display:none;flex-direction:column;gap:1px;margin:1px 0 var(--sp-1) var(--sp-4);
+    padding-left:var(--sp-2);border-left:1px solid var(--border-strong)}
+  .detail-tab.active + .detail-subnav{display:flex}
+  .detail-subtab{display:flex;align-items:center;gap:var(--sp-1);padding:var(--sp-1) var(--sp-2);border-radius:var(--r-sm);
+    font-size:var(--fs-sm);font-weight:600;color:var(--muted);cursor:pointer;user-select:none;
+    transition:background .12s,color .12s}
+  .detail-subtab:hover{background:var(--panel2);color:var(--text)}
+  .detail-subtab.active{color:var(--text);font-weight:800;background:var(--panel2)}
+  .detail-subtab .sub-count{margin-left:auto;font-size:var(--fs-xs);font-weight:700;color:var(--muted);
+    font-variant-numeric:tabular-nums}
+
+  /* Schmale Fenster: die Sidebar legt sich als waagerechte Leiste über den Inhalt. */
+  @media(max-width:1024px){ /* Seitenleiste oben: unter 1024 px bliebe dem Inhalt neben ihr zu wenig Breite */
+    .detail-shell{flex-direction:column}
+    .detail-nav{width:auto;flex-direction:row;overflow-x:auto;overflow-y:hidden;gap:var(--sp-1);
+      padding:var(--sp-2) var(--sp-3);border-right:none;border-bottom:1px solid var(--border);align-items:center}
+    .detail-nav .detail-nav-head,
+    .detail-nav .detail-nav-label{display:none}
+    /* Waagerecht wäre eine eingerückte Unterliste sinnlos — dort übernimmt die
+       Unterreiter-Leiste im Inhalt (.sub-tabs) wieder die Führung. Die Regel muss den
+       Nachbarselektor `.detail-tab.active + .detail-subnav` (drei Klassen) überbieten. */
+    .detail-nav .detail-tab.active + .detail-subnav,
+    .detail-nav .detail-subnav{display:none}
+    .detail-tab{flex:none;padding:var(--sp-1) var(--sp-2)}
+    .detail-tab .tab-label{max-width:none}
+    .detail-tab.active::before{top:auto;bottom:0;left:var(--sp-2);right:var(--sp-2);width:auto;height:2px;border-radius:2px 2px 0 0}
+  }
+  .map-host{width:100%;height:100%;display:flex;flex-direction:column}
+  .map-host #main{flex:1;min-height:0}
+  .detail-wrap{max-width:none;margin:0 auto;padding:var(--sp-5) var(--sp-5) var(--sp-7)}
+  .detail-nav-title textarea.detail-title-input{display:block;margin:0;padding:2px 0;font-size:var(--fs-md);font-weight:800;
+    font-family:inherit;line-height:var(--lh-tight);border:none;border-bottom:2px solid transparent;border-radius:0;
+    background:transparent;box-shadow:none;width:100%;min-height:0;color:var(--text);resize:none;overflow:hidden;
+    field-sizing:content}
+  .detail-nav-title textarea.detail-title-input:focus{outline:none;box-shadow:none;border-bottom-color:var(--accent)}
+  .detail-quickmap{flex:none;width:60px}
+  .mini-map-img{position:relative;display:block;width:100%;aspect-ratio:594/802;
+    background-image:url('../germany-map.png');background-size:100% 100%;background-repeat:no-repeat;
+    border-radius:var(--r-sm);overflow:hidden}
+  .mini-map-marker{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;
+    background:var(--err);border:1.5px solid var(--panel);box-shadow:0 0 2px rgba(0,0,0,.35)}
+  .detail-pane.hidden{display:none}
+  /* Formularfelder: so viele Spalten wie Platz ist (statt fest 2 und max. 1200 px) — auf großen
+     Bildschirmen stehen mehr Felder nebeneinander, statt einzelne Felder über 800 px zu ziehen. */
+  .detail-pane .grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--sp-2) var(--sp-3)}
+  .detail-pane label{margin-top:0}
+  .grundstueck-layout{display:flex;gap:var(--sp-4);align-items:stretch;height:85vh}
+  .grundstueck-info{flex:none;width:340px;overflow-y:auto;padding-right:var(--sp-1)}
+  /* Grundstück · Karte: eine Karte mit Abschnitten (.gs-sec), getrennt durch Linien */
+  .gs-panel{padding:0;margin:0}
+  .gs-sec{padding:var(--sp-3) var(--sp-4);border-top:1px solid var(--border);min-width:0}
+  .gs-sec:first-child{border-top:0}
+  .gs-sec-head{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-1)}
+  .gs-sec-head button{margin:0;flex:none}
+  .gs-sec-label{display:flex;align-items:center;gap:var(--sp-1);margin:0 0 var(--sp-1);font-size:var(--fs-xs);
+    font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .gs-sec-head .gs-sec-label{margin:0}
+  .gs-sec input[type="text"]{margin:0}
+  .gs-area b{font-size:var(--fs-xl);font-weight:800;line-height:1.15;font-variant-numeric:tabular-nums}
+  .gs-sub{font-size:var(--fs-sm);color:var(--muted);font-variant-numeric:tabular-nums}
+  .gs-tech{margin-top:var(--sp-2);font-size:var(--fs-sm)}
+  .gs-tech summary{cursor:pointer;color:var(--muted);font-size:var(--fs-xs);font-weight:700}
+  .gs-tech .stat b{font-size:var(--fs-xs);overflow-wrap:anywhere;text-align:right}
+  .gs-quali-row{display:flex;align-items:flex-start;gap:var(--sp-2);padding:var(--sp-2) 0;border-top:1px solid var(--border)}
+  .gs-quali-row:first-child{border-top:0;padding-top:0}
+  .gs-quali-main{flex:1;min-width:0}
+  .gs-quali-name{font-size:var(--fs-sm);font-weight:700;overflow-wrap:anywhere}
+  .gs-quali-meta{display:flex;align-items:center;flex-wrap:wrap;gap:var(--sp-1);font-size:var(--fs-xs);color:var(--muted)}
+  .gs-quali-meta select{width:auto;margin:0;padding:1px 4px;font-size:var(--fs-xs);min-height:0;height:auto}
+  .gs-quali-status{flex:none;margin:0;padding:0;border:0;background:none;box-shadow:none;cursor:pointer}
+  .gs-actions{display:flex;flex-wrap:wrap;gap:var(--sp-1)}
+  .gs-actions button{margin:0}
+  .gs-actions #btn-clear{margin-left:auto}
+  #dpane-grundstueck .map-host{flex:1}
+  .netz-layout{display:flex;gap:var(--sp-4);align-items:stretch;height:85vh}
+  .netz-info{flex:none;width:420px;overflow-y:auto;padding-right:var(--sp-1)}
+  #dpane-netz .map-host{flex:1}
+  .vergleich-table{border-collapse:collapse;width:100%;font-size:var(--fs-sm);line-height:var(--lh-tight)}
+  .vergleich-table th,.vergleich-table td{text-align:left;vertical-align:top;
+    padding:var(--sp-1) var(--sp-2);border-bottom:1px solid var(--border)}
+  .vergleich-table th{color:var(--muted);font-weight:700;font-size:var(--fs-xs)}
+  .vergleich-table input,.vergleich-table select{margin:0;padding:var(--sp-1);font-size:var(--fs-xs)}
+  /* Anteil des Flurstücks im Projektgebiet — Nebenangabe zur verschnittenen Fläche */
+  .flst-anteil{display:block;color:var(--muted);font-size:var(--fs-xs);font-weight:600;margin-top:1px}
+  #uw-minkv-toggle button.active{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+  .grundstueck-subpane.hidden{display:none}
+
+  /* ---- Grundstück-Tabellen (Flurstücke, Eigentümer, Sicherung) ----
+     Ziel: passen ohne waagerechtes Scrollen in die Inhaltsbreite ab ~1000px. Deshalb
+     kompakte Felder (feste Höhe, kein Außenabstand, keine Mindestbreite aus den globalen
+     Formularregeln) und zusammengefasste Spalten (.gs-stack = mehrere Felder übereinander). */
+  .gs-table-summary{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-3);margin:0 0 var(--sp-2);
+    font-size:var(--fs-sm);color:var(--muted)}
+  .gs-table-summary b{color:var(--text);font-weight:700}
+  .gs-table{border-collapse:collapse;width:100%;font-size:var(--fs-sm);line-height:var(--lh-tight)}
+  .gs-table th{text-align:left;vertical-align:bottom;padding:var(--sp-2);border-bottom:1px solid var(--border-strong);
+    font-size:var(--fs-xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+  .gs-table td{text-align:left;vertical-align:top;padding:var(--sp-2);border-bottom:1px solid var(--border);min-width:0}
+  .gs-table tr:hover>td{background:var(--panel2)}
+  .gs-table input[type=text],.gs-table input[type=email],.gs-table input[type=number],
+  .gs-table input[type=date],.gs-table select{width:100%;min-width:0;max-width:none;margin:0;
+    padding:3px var(--sp-2);height:30px;font-size:var(--fs-sm)}
+  .gs-table textarea.gs-grow{width:100%;min-width:0;min-height:30px;margin:0;padding:5px var(--sp-2);resize:none;overflow:hidden;
+    font-size:var(--fs-sm);line-height:var(--lh-tight);field-sizing:content}
+  .gs-table .num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .gs-table .sub{display:block;margin-top:2px;font-size:var(--fs-xs);color:var(--muted);font-weight:500;overflow-wrap:anywhere}
+  .gs-table .strong{font-weight:700}
+  .gs-stack{display:flex;flex-direction:column;gap:var(--sp-1)}
+  .gs-inline{display:flex;gap:var(--sp-1)}
+  .gs-inline>*{min-width:0}
+  .gs-row-actions{display:flex;flex-direction:column;gap:var(--sp-1);align-items:stretch}
+  .gs-row-actions button{margin:0;white-space:nowrap}
+  .gs-detail-btn{margin:0;white-space:nowrap}
+  .gs-detail-btn .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:4px;vertical-align:middle}
+  .gs-table tr.gs-detail-row>td{background:var(--panel2);padding:var(--sp-2) var(--sp-3) var(--sp-3)}
+  .gs-detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,150px)) minmax(0,1fr);gap:var(--sp-2) var(--sp-3);align-items:end}
+  .gs-detail-grid label{margin:0 0 2px;font-size:var(--fs-xs)}
+  @media(max-width:1100px){ .gs-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+
+  .pane{flex:1;overflow-y:auto;padding:var(--sp-2) var(--sp-4) var(--sp-5)}
+  .pane.hidden{display:none}
+  .pane-hint{font-size:var(--fs-sm);line-height:var(--lh-text);color:var(--accent-ink);margin:var(--sp-2) 0 var(--sp-3);
+    background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:var(--r-md);padding:var(--sp-2) var(--sp-3)}
+
+  /* ---- Formulare: gestaffelte Nähe. Beschriftung klebt am Feld (4px),
+     zwischen zwei Feldern liegt eine Rasterstufe (12px). ---- */
+  label{font-size:var(--fs-sm);font-weight:700;color:var(--muted);display:block;margin:0 0 var(--sp-1)}
+  input[type=text],input[type=email],input[type=date],input[type=number],textarea,select{
+    width:100%;background:var(--panel);color:var(--text);border:1px solid var(--field-border);
+    border-radius:var(--r-sm);padding:var(--sp-2) var(--sp-3);font-size:var(--fs-base);font-family:inherit;
+    line-height:var(--lh-tight);margin-bottom:var(--sp-3);transition:border-color .15s,box-shadow .15s}
+  /* Feldbreite sagt etwas über den Inhalt: ein Datum braucht keine ganze Zeile. */
+  input[type=date]{width:auto;min-width:150px}
+  input[type=number]{max-width:160px}
+  input::placeholder,textarea::placeholder{color:var(--placeholder)}
+  textarea{resize:vertical;min-height:76px;line-height:var(--lh-text)}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  input[type=checkbox],input[type=radio]{accent-color:var(--accent)}
+
+  button{background:var(--accent2);color:var(--on-accent);border:1px solid var(--accent2);border-radius:var(--r-sm);
+    padding:var(--sp-2) var(--sp-3);font-size:var(--fs-base);font-weight:700;cursor:pointer;font-family:inherit;
+    line-height:var(--lh-tight);transition:background .15s,transform .05s,border-color .15s}
+  button:hover{background:var(--accent-ink);border-color:var(--accent-ink)}
+  button:active{transform:translateY(1px)}
+  button.secondary{background:var(--panel);color:var(--text);border:1px solid var(--field-border);box-shadow:none}
+  button.secondary:hover{background:var(--panel2);border-color:var(--text)}
+  button.danger{background:var(--panel);color:var(--err-ink);border:1px solid var(--err-line);box-shadow:none}
+  button.danger:hover{background:var(--err);color:var(--on-accent);border-color:var(--err)}
+  button.small{padding:var(--sp-1) var(--sp-2);font-size:var(--fs-sm);border-radius:var(--r-sm);box-shadow:none}
+
+  .row,.btn-row{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-3);align-items:center}
+
+  /* ---- Karten-Hierarchie ----
+     Ebene 1 (.card/.info/.fold/.phase-card): weiße Fläche auf getöntem Grund, 1px Rahmen,
+       kein Schatten. Trägt einen Titel und mehr als ein Feld.
+     Ebene 2 (.kpi/.keyfact/.next-step/.komm-entry): getönte Fläche, kleiner Radius —
+       sitzt innerhalb einer Karte und bekommt deshalb keinen eigenen Schatten.
+     Ebene 0: eine Überschrift mit Abstand (.section-label) — für Gruppen, die nur
+       zusammengehören, aber keinen eigenen Rahmen brauchen. */
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);
+    padding:var(--sp-4);margin-bottom:var(--sp-3)}
+  .card h3{margin:0 0 var(--sp-2);font-size:var(--fs-md);font-weight:800;display:flex;
+    justify-content:space-between;align-items:center;gap:var(--sp-2)}
+  .card .meta{font-size:var(--fs-xs);color:var(--muted);margin-bottom:var(--sp-2)}
+  .card .actions{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-top:var(--sp-3)}
+
+  .info{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);
+    padding:var(--sp-4);margin-bottom:var(--sp-3);font-size:var(--fs-sm)}
+  .card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-3);gap:var(--sp-2)}
+  .card-head strong{font-size:var(--fs-md);font-weight:800}
+  .lage-result{font-size:var(--fs-sm);color:var(--muted);line-height:var(--lh-text)}
+
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);margin-bottom:var(--sp-3)}
+  .kpi{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-sm);
+    padding:var(--sp-2) var(--sp-3);display:flex;flex-direction:column;gap:2px}
+  .kpi{min-width:0}
+  .kpi span{font-size:var(--fs-xs);color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    hyphens:auto;overflow-wrap:anywhere}
+  .kpi b{overflow-wrap:anywhere}
+  .kpi b{font-size:var(--fs-md);font-weight:800;line-height:1.18;font-variant-numeric:tabular-nums}
+  .stat{display:flex;justify-content:space-between;gap:var(--sp-3);padding:var(--sp-1) 0;
+    border-bottom:1px solid var(--border);font-size:var(--fs-sm)}
+  .stat:last-child{border:0;padding-bottom:0}
+  .stat span{color:var(--muted);font-weight:500}
+  .stat b{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:var(--fs-xs);font-weight:600;
+    font-variant-numeric:tabular-nums}
+
+  /* Leerzustand: die erste Begegnung mit der Anwendung. Ruhige Fläche, ein
+     angedeuteter Platzhalter-Ring, Text linksbündig zentriert lesbar. */
+  .empty{color:var(--muted);font-size:var(--fs-sm);text-align:center;padding:var(--sp-6) var(--sp-4);
+    line-height:var(--lh-text);background:var(--panel2);border:1px dashed var(--border-strong);
+    border-radius:var(--r-md)}
+  .empty::before{content:'';display:block;width:26px;height:26px;margin:0 auto var(--sp-3);
+    border-radius:50%;border:1.5px dashed var(--border-strong)}
+
+  details{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);
+    margin-top:var(--sp-3);overflow:hidden}
+  summary{padding:var(--sp-2) var(--sp-3);cursor:pointer;font-size:var(--fs-sm);font-weight:700;
+    color:var(--muted);list-style:none}
+  summary::-webkit-details-marker{display:none}
+  details[open] summary{border-bottom:1px solid var(--border);color:var(--text)}
+  details .body{padding:var(--sp-3);font-size:var(--fs-sm);color:var(--muted);line-height:var(--lh-text)}
+
+  /* Status-Pille: gefüllte Fläche mit Rahmen in derselben Farbfamilie — sie sagt
+     „so steht es", nicht „hier kann man drücken". */
+  .pill{display:inline-flex;align-items:center;padding:1px var(--sp-2);border-radius:var(--r-full);
+    font-size:var(--fs-xs);font-weight:700;line-height:var(--lh-tight);
+    background:var(--panel2);border:1px solid var(--border-strong);color:var(--muted);
+    letter-spacing:.02em;white-space:normal;max-width:100%;overflow-wrap:anywhere}
+  .pill.ok{background:var(--ok-soft);border-color:var(--ok-line);color:var(--ok-ink)}
+  .pill.warn{background:var(--warn-soft);border-color:var(--warn-line);color:var(--warn-ink)}
+  .pill.err{background:var(--err-soft);border-color:var(--err-line);color:var(--err-ink)}
+  .pill.phase{background:var(--phase-soft);border-color:var(--phase-soft);color:var(--phase-ink)}
+
+  /* ---- Prozess-Tab ---- */
+  .phase-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);
+    margin-bottom:var(--sp-2);overflow:hidden}
+  .phase-card summary{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-3);cursor:pointer;list-style:none}
+  .phase-card summary::-webkit-details-marker{display:none}
+  .phase-card[open] summary{border-bottom:1px solid var(--border)}
+  .phase-num{width:24px;height:24px;border-radius:50%;flex:none;display:grid;place-items:center;
+    font-size:var(--fs-xs);font-weight:800;background:var(--panel2);border:1px solid var(--border-strong);
+    color:var(--muted);font-variant-numeric:tabular-nums}
+  .phase-card.done .phase-num{background:var(--ok);border-color:var(--ok);color:var(--on-accent)}
+  .phase-card.current .phase-num{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-soft)}
+  .phase-card.current summary{background:var(--accent-soft)}
+  .phase-title{font-size:var(--fs-base);font-weight:800;flex:1}
+  .phase-bar{width:120px;height:5px;border-radius:var(--r-full);background:var(--border);overflow:hidden;flex:none}
+  .phase-bar b{display:block;height:100%;background:var(--ok);border-radius:var(--r-full)}
+  .phase-count{font-size:var(--fs-xs);color:var(--muted);font-weight:700;flex:none;min-width:36px;
+    text-align:right;font-variant-numeric:tabular-nums}
+  .step-row{display:flex;align-items:flex-start;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);
+    border-bottom:1px solid var(--border);font-size:var(--fs-sm)}
+  .step-row:last-child{border-bottom:0}
+  .step-check{flex:none;width:20px;height:20px;border-radius:var(--r-sm);border:1.5px solid var(--field-border);
+    background:var(--panel);display:grid;place-items:center;font-size:var(--fs-xs);font-weight:800;cursor:pointer;
+    color:transparent;transition:background .12s,border-color .12s,color .12s;margin-top:0;padding:0;box-shadow:none}
+  .step-check:hover{border-color:var(--accent)}
+  .step-check.laufend{color:var(--warn-ink);border-color:var(--warn);background:var(--warn-soft)}
+  .step-check.erledigt{color:var(--on-accent);border-color:var(--ok);background:var(--ok)}
+  .step-check.entfaellt{color:var(--muted);border-color:var(--border-strong);background:var(--panel2)}
+  .step-check.derived{cursor:default;opacity:.9}
+  .step-check.gate{border-radius:50%}
+  .step-main{flex:1;min-width:0}
+  .step-name{font-weight:600;line-height:var(--lh-tight)}
+  .step-row.done .step-name{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--border-strong)}
+  .step-row.gate .step-name{color:var(--accent2)}
+  .step-sub{font-size:var(--fs-xs);color:var(--muted);margin-top:2px;line-height:var(--lh-tight)}
+  .rolle-badge{flex:none;font-size:var(--fs-xs);font-weight:700;color:var(--muted);background:var(--panel2);
+    border:1px solid var(--border);border-radius:var(--r-sm);padding:0 var(--sp-1);margin-top:1px;white-space:nowrap;
+    text-transform:uppercase;letter-spacing:.04em}
+  .step-info{flex:none;width:18px;height:18px;border-radius:50%;border:1px solid var(--field-border);
+    background:var(--panel);color:var(--muted);font-size:var(--fs-xs);font-weight:800;display:grid;place-items:center;
+    cursor:pointer;margin-top:1px;padding:0;box-shadow:none}
+  .step-info:hover{background:var(--panel2);color:var(--text);border-color:var(--text)}
+  .next-steps{display:flex;flex-direction:column;gap:var(--sp-1)}
+  .next-step{display:flex;align-items:center;gap:var(--sp-2);background:var(--panel2);border:1px solid var(--border);
+    border-radius:var(--r-sm);padding:var(--sp-2) var(--sp-3);font-size:var(--fs-sm);font-weight:600}
+  .prozess-kopf{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:var(--sp-2)}
+  /* ---- Prozess-Tab: nur die Aufgabenliste, volle Breite ---- */
+  @media (max-width:720px){ .task-cat{overflow-x:auto} }
+  /* ---- Übersicht: Projektfortschritt (alle Phasen) links, Stammdaten + Projektordner rechts ---- */
+  .uebersicht-extras{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:var(--sp-3);align-items:start}
+  .uebersicht-extras-side{min-width:0}
+  @media (max-width:900px){ .uebersicht-extras{grid-template-columns:minmax(0,1fr)} }
+  .task-cat-hint{margin:0 0 var(--sp-2);color:var(--muted);font-size:var(--fs-xs);line-height:var(--lh-text)}
+
+  /* ---- Gemeinsame Tabellen-Basis (Aufgaben + Genehmigungsplanung) ----
+     Die Tabellen tragen die eigentliche Arbeit. Deshalb: klar abgesetzter Kopf,
+     durchgehende Zeilenlinien und Zebra statt eines vollen Gitters (senkrechte Linien
+     in jeder Zelle machten die Fläche unruhig), Zahlen und Daten rechtsbündig mit
+     Tabellenziffern, Eingabefelder in Zellen mit sichtbarem Rahmen. Zeilenhöhe bleibt
+     dicht — 50 Flurstücke sollen überfliegbar bleiben. */
+  .data-table,.task-table{width:100%;border-collapse:separate;border-spacing:0;
+    border:1px solid var(--border-strong);border-radius:var(--r-md);overflow:hidden;background:var(--panel);
+    font-size:var(--fs-sm);line-height:var(--lh-tight)}
+  .data-table th,.task-table th{text-align:left;font-size:var(--fs-xs);font-weight:800;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);padding:var(--sp-2) var(--sp-3);background:var(--th-bg);
+    border-bottom:1px solid var(--line);white-space:nowrap}
+  .data-table td,.task-table td{padding:var(--sp-2) var(--sp-3);border-bottom:1px solid var(--border);
+    vertical-align:middle;font-size:var(--fs-sm)}
+  .data-table tr:last-child td,.task-table tr:last-child td{border-bottom:0}
+  .task-row:not(.task-cat-row):not(.task-subrow):hover td{background:var(--row-hover)}
+  /* Zebra nur für die flachen Genehmigungs-Tabellen — die Aufgaben-Tabelle gliedert
+     sich bereits über farbige Gruppen-Kopfzeilen. */
+  .data-table tbody tr:nth-child(even) td{background:var(--zebra)}
+  .data-table tbody tr:hover td{background:var(--row-hover)}
+  .data-table td.col-check,.data-table th.col-check{width:1%;white-space:nowrap;text-align:center}
+  .data-table td.col-date,.data-table th.col-date{width:1%;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .data-table td.col-typ,.data-table th.col-typ{width:1%;white-space:nowrap}
+  .data-table td.col-act,.data-table th.col-act{width:1%;white-space:nowrap;text-align:right}
+  .data-table input[type=checkbox]{width:16px;height:16px;margin:0;accent-color:var(--accent);cursor:pointer}
+  .data-table input[type=text],.data-table input[type=date],.data-table select{
+    margin:0;padding:var(--sp-1) var(--sp-2);font-size:var(--fs-sm);border-radius:var(--r-sm);
+    border:1px solid var(--field-border);background:var(--panel)}
+  /* Ohne Mindestbreite fallen Textspalten in breiten Tabellen (Eigentümer: 9 Spalten)
+     auf wenige Pixel zusammen. Die Tabelle scrollt stattdessen waagerecht in ihrer Karte. */
+  .data-table input[type=text]{min-width:88px}
+  .data-table input[type=date]{width:144px;min-width:0}
+  /* width:auto, sonst zieht das globale width:100% die Auswahl in einer
+     schrumpfenden Spalte (width:1%) auf die reine Pfeilbreite zusammen. */
+  .data-table select{width:auto;min-width:104px}
+  .data-table .row-name{font-weight:600;line-height:var(--lh-tight)}
+  .data-table tr.done .row-name{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--border-strong)}
+  .data-table .table-empty{color:var(--muted);text-align:center;padding:var(--sp-4) var(--sp-3);font-size:var(--fs-sm)}
+  .task-table td.col-status,.task-table th.col-status{white-space:nowrap;width:1%}
+  .task-table td.col-datum,.task-table th.col-datum{white-space:nowrap;width:1%;color:var(--muted);
+    font-size:var(--fs-xs);font-variant-numeric:tabular-nums;text-align:right}
+  .task-table td.col-rolle,.task-table th.col-rolle{white-space:nowrap;width:1%}
+  .task-name{font-weight:600;line-height:var(--lh-tight)}
+  .task-row.done .task-name{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--border-strong)}
+  .task-row.gate .task-name{color:var(--accent2)}
+  .task-sub{font-size:var(--fs-xs);color:var(--muted);margin-top:2px;line-height:var(--lh-tight)}
+  .task-attach{white-space:nowrap;margin-top:2px}
+  .task-nofile{color:var(--border-strong);font-size:var(--fs-md)}
+  .task-table td.col-deadline,.task-table th.col-deadline{white-space:nowrap;width:1%;font-variant-numeric:tabular-nums}
+  .task-table td.col-prio,.task-table th.col-prio{white-space:nowrap;width:1%}
+  .task-table td.col-actions,.task-table th.col-actions{white-space:nowrap;width:1%;text-align:right}
+  .task-table .cell-input,.task-table .cell-select{width:auto;min-width:0;margin:0;
+    padding:var(--sp-1) var(--sp-2);font-size:var(--fs-sm);border-radius:var(--r-sm);
+    border:1px solid var(--field-border);margin-bottom:0}
+  .task-table .cell-input{width:108px}
+  /* Aufgaben-Tabelle kompakter (7 Spalten mit Feldern): schmalere Zellränder und Zuständig-Feld,
+     damit sie ab ~730 px Breite ohne Überlauf passt. Kein overflow-x an .task-cat: das
+     Datei-Popover (.doku-filelist-pop, absolut positioniert) würde sonst abgeschnitten. */
+  .task-table th,.task-table td{padding-left:var(--sp-2);padding-right:var(--sp-2)}
+  .task-table td.col-rolle .cell-input{width:92px}
+  /* Kopfzeile bleibt beim Scrollen oben stehen (Scroll-Container ist .detail-main).
+     Dafür darf die Tabelle kein overflow:hidden haben — die runden Ecken tragen deshalb
+     die Eckzellen selbst. */
+  .task-table{overflow:visible}
+  .task-table thead th{position:sticky;top:0;z-index:4;box-shadow:0 1px 0 var(--line)}
+  .task-table thead th:first-child{border-top-left-radius:var(--r-md)}
+  .task-table thead th:last-child{border-top-right-radius:var(--r-md)}
+  .task-table tbody:last-child tr:last-child td:first-child{border-bottom-left-radius:var(--r-md)}
+  .task-table tbody:last-child tr:last-child td:last-child{border-bottom-right-radius:var(--r-md)}
+  /* Zuständig: Personenauswahl mit Avatar (Initialen oder Profilbild) */
+  .zust-avatar{width:20px;height:20px;font-size:9px;flex:none} /* Ausnahme: Initialen im 20-px-Kreis */
+  .zust-avatar-leer{display:inline-block;border-radius:50%;border:1.5px dashed var(--border-strong);background:var(--panel2)}
+  .zust-btn{display:flex;align-items:center;gap:var(--sp-1);width:136px;margin:0;padding:2px var(--sp-2) 2px 2px;
+    background:var(--panel);color:var(--text);border:1px solid var(--field-border);border-radius:var(--r-full);
+    font-size:var(--fs-sm);font-weight:600;box-shadow:none;text-align:left}
+  .zust-btn:hover{background:var(--panel2);border-color:var(--text)}
+  .zust-btn.leer{color:var(--muted);font-weight:500}
+  .zust-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .zust-name em{font-style:normal;color:var(--muted);font-weight:500}
+  .zust-caret{flex:none;color:var(--muted);font-size:var(--fs-xs)}
+  .zust-pop{position:fixed;z-index:9500;min-width:200px;max-width:280px;max-height:min(50vh,320px);overflow-y:auto;
+    padding:var(--sp-1);background:var(--panel);border:1px solid var(--border-strong);border-radius:var(--r-md);box-shadow:var(--elev-2)}
+  .zust-opt{display:flex;align-items:center;gap:var(--sp-2);width:100%;margin:0;padding:var(--sp-1) var(--sp-2);
+    background:none;color:var(--text);border:0;border-radius:var(--r-sm);box-shadow:none;font-size:var(--fs-sm);font-weight:600;text-align:left}
+  .zust-opt .zust-avatar{width:24px;height:24px;font-size:10px} /* Ausnahme: Initialen im 24-px-Kreis */
+  .zust-opt:hover,.zust-opt:focus-visible{background:var(--row-hover);color:var(--text);outline:none}
+  .zust-opt.aktiv{background:var(--accent-soft);color:var(--accent-ink)}
+  /* Titelfeld in der Zelle: erst am Rahmen erkennbar, wenn man hineinfährt — sonst
+     stünden in jeder Zeile fünf Kästen. */
+  .task-table input.cell-input-title{width:100%;font-weight:600;border-color:transparent;background:transparent;
+    padding:var(--sp-1)}
+  .task-table input.cell-input-title:hover,.task-table input.cell-input-title:focus{
+    border-color:var(--field-border);background:var(--panel)}
+  .cell-select.prio-hoch{color:var(--err-ink);border-color:var(--err);font-weight:700}
+  .cell-select.prio-mittel{color:var(--warn-ink);border-color:var(--warn);font-weight:700}
+  .cell-select.prio-niedrig,.cell-select.prio-none{color:var(--muted)}
+  /* Status-Auswahl in der Zelle: volle Zellfarbe, Farbe kommt inline (Button oder Auswahl) */
+  .status-pill{display:block;width:100%;min-width:96px;border:none;border-radius:var(--r-sm);
+    padding:var(--sp-1) var(--sp-2);font-size:var(--fs-xs);font-weight:700;font-family:inherit;
+    cursor:pointer;text-align:center;margin:0;line-height:var(--lh-tight)}
+  .status-pill:focus{outline:none;box-shadow:0 0 0 2px rgba(0,0,0,.22) inset}
+  button.status-pill.disabled,button.status-pill:disabled{cursor:default;opacity:.75}
+  /* Gruppen-Kopfzeilen: farbiger linker Balken + leicht getönter Hintergrund je Kategorie.
+     --cat-color wird inline je Kategorie gesetzt. */
+  .task-cat-row td{padding:var(--sp-3) var(--sp-3) var(--sp-2);border-bottom:none;
+    border-left:3px solid var(--cat-color,var(--accent));
+    background:color-mix(in srgb, var(--cat-color,var(--accent)) 7%, var(--panel))}
+  .task-cat-row:first-child td{padding-top:var(--sp-2)}
+  /* Einklappbar: Kopfzeile ist die Schaltfläche, der Pfeil dreht sich beim Öffnen */
+  .task-cat-row{cursor:pointer;user-select:none}
+  .task-cat-row:hover td{background:color-mix(in srgb, var(--cat-color,var(--accent)) 13%, var(--panel))}
+  .task-cat-row:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+  .task-cat-row:not(.offen) td{padding-bottom:var(--sp-3)}
+  .task-cat-caret{flex:none;width:1em;color:var(--muted);transition:transform .15s;display:inline-block;text-align:center;
+    font-size:14px} /* Ausnahme: Glyphengröße des ▸ */
+  .task-cat-row.offen .task-cat-caret{transform:rotate(90deg)}
+  .task-cat-head{display:flex;align-items:center;gap:var(--sp-2)}
+  .task-cat-head strong{font-size:var(--fs-base)}
+  .task-subrow td{padding-top:var(--sp-1);padding-bottom:var(--sp-1);background:var(--zebra)}
+  .task-subrow:hover td{background:var(--row-hover)}
+  .task-subrow .task-name.sub{font-weight:500;color:var(--muted);display:flex;align-items:center;gap:var(--sp-1)}
+  /* Status-Verwaltung: kleines Panel oberhalb der Tabelle */
+  .status-manager{margin-bottom:var(--sp-2);background:var(--panel2);border:1px solid var(--border);
+    border-radius:var(--r-md);padding:0 var(--sp-3)}
+  .status-manager summary{padding:var(--sp-2) 0;cursor:pointer;font-size:var(--fs-sm);font-weight:700;
+    color:var(--accent2);list-style:none}
+  .status-manager summary::-webkit-details-marker{display:none}
+  .status-manager-list{padding:0 0 var(--sp-2);display:flex;flex-direction:column;gap:var(--sp-1)}
+  .status-manager-row{display:flex;align-items:center;gap:var(--sp-2)}
+  .status-manager-row input[type=color]{width:30px;height:30px;padding:2px;margin:0;flex:none;
+    border-radius:var(--r-sm);cursor:pointer}
+  .status-manager-row input[type=text]{flex:1;min-width:0;margin:0}
+  .status-done-toggle{display:flex;align-items:center;gap:var(--sp-1);font-size:var(--fs-xs);font-weight:600;
+    color:var(--muted);white-space:nowrap;flex:none}
+  .status-done-toggle input{width:auto;margin:0}
+  .status-manager > button{margin-bottom:var(--sp-2)}
+  .prozess-overall-bar{height:6px;border-radius:var(--r-full);background:var(--border);overflow:hidden;
+    margin:var(--sp-1) 0 var(--sp-3)}
+  .prozess-overall-bar b{display:block;height:100%;background:var(--ok);border-radius:var(--r-full);width:0;transition:width .2s}
+  #prozess-phasen.compact .phase-card{margin-bottom:var(--sp-1)}
+  #prozess-phasen.compact .phase-card summary{padding:var(--sp-1) var(--sp-2);gap:var(--sp-2)}
+  #prozess-phasen.compact .phase-num{width:20px;height:20px;font-size:var(--fs-xs)}
+  #prozess-phasen.compact .phase-title{font-size:var(--fs-sm);font-weight:700}
+  #prozess-phasen.compact .phase-bar{width:52px}
+  #prozess-phasen.compact .phase-count{font-size:var(--fs-xs)}
+  #prozess-phasen.compact .step-row{padding:var(--sp-1) var(--sp-2);font-size:var(--fs-sm)}
+  #prozess-phasen.compact .rolle-badge{display:none}
+  .frist-row{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-1) 0;
+    border-bottom:1px solid var(--border);font-size:var(--fs-sm)}
+  .frist-row:last-child{border-bottom:0}
+  .frist-datum{flex:none;width:88px;font-weight:800;font-variant-numeric:tabular-nums}
+  .frist-link{cursor:pointer;color:var(--accent2);font-weight:700;overflow-wrap:anywhere}
+  #fristen-dashboard .frist-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px var(--sp-2);align-items:center}
+  #fristen-dashboard .frist-row>.pill{justify-self:start}
+  /* Breite Kalenderspalte: Fristen wieder einzeilig (Datum · Restzeit · Text · Projekt) */
+  #fristen-dashboard{container-type:inline-size}
+  @container (min-width:560px){
+    #fristen-dashboard .frist-row{grid-template-columns:6rem auto minmax(0,1fr) auto}
+    #fristen-dashboard .frist-row>span:nth-child(3),#fristen-dashboard .frist-row>.frist-link{grid-column:auto}
+  }
+  #fristen-dashboard .frist-row>span:nth-child(3),#fristen-dashboard .frist-row>.frist-link{grid-column:1 / -1;min-width:0;overflow-wrap:anywhere}
+  .frist-link:hover{text-decoration:underline}
+  /* ---- Meilenstein-Tabelle (B-Plan-Verfahren) ---- */
+  .data-table td.col-nr,.data-table th.col-nr{width:1%;white-space:nowrap;text-align:right;
+    color:var(--muted);font-weight:800;font-variant-numeric:tabular-nums}
+  /* „von … bis …" bricht bei wenig Platz um (bis-Paar in die zweite Zeile), statt aus der Karte zu ragen */
+  .ms-range{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-1);font-size:var(--fs-xs);color:var(--muted)}
+  .ms-pair{display:inline-flex;align-items:center;gap:var(--sp-1);white-space:nowrap}
+  .ms-pair>span{min-width:1.6em}
+  .ms-table td.col-date{white-space:normal}
+  .ms-range input[type=date]{width:132px}
+  .table-foot{margin-top:var(--sp-2);font-size:var(--fs-xs);color:var(--muted);font-weight:600}
+
+  /* ---- Dashboard / Übersicht ----
+     Aufbau: .dash-head (Phase, Kennzahlen, Fortschritt) → .dash-cols mit „Stand je Bereich"
+     (Liste, eine Zeile je Bereich) und der Seitenspalte „Als Nächstes" + Updates.
+     Alles Ebene-1-Karten ohne farbige Ränder; Farbe nur in den Status-Pills. */
+  .dash-head{display:flex;flex-direction:column;gap:var(--sp-3)}
+  .dash-head-top{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sp-4);flex-wrap:wrap}
+  .dash-head-phase{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 260px}
+  .dash-head-label{font-size:var(--fs-xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .dash-head-phase strong{font-size:var(--fs-lg);font-weight:800;line-height:var(--lh-tight);overflow-wrap:anywhere}
+  .dash-head-sub{font-size:var(--fs-sm);color:var(--muted)}
+  .dash-facts{display:flex;flex-wrap:wrap;gap:var(--sp-2) var(--sp-5);margin:0;flex:0 1 auto;min-width:0}
+  .dash-facts div{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .dash-facts dt{font-size:var(--fs-xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .dash-facts dd{margin:0;font-size:var(--fs-base);font-weight:800;color:var(--text);
+    font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .dash-progress{display:flex;align-items:center;gap:var(--sp-3)}
+  .dash-progress .dash-bar{flex:1;margin:0}
+  .dash-progress>span{font-size:var(--fs-sm);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .dash-progress>span b{color:var(--text);font-weight:800}
+  .dash-bar{height:8px;border-radius:var(--r-full);background:var(--border);overflow:hidden}
+  .dash-bar b{display:block;height:100%;background:var(--ok);border-radius:var(--r-full)}
+
+  .dash-cols{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:var(--sp-3);align-items:start}
+  .dash-cols>.info,.dash-side>.info{margin-bottom:0}
+  .dash-side{display:flex;flex-direction:column;gap:var(--sp-3);min-width:0}
+  @media(max-width:1100px){ .dash-cols{grid-template-columns:minmax(0,1fr)} }
+
+  /* Stand je Bereich: Zeilen statt Kacheln. Grid mit festen Spalten, damit Status-Pills
+     untereinander stehen; der Kurzbefund bricht um statt zu überlappen. */
+  .dash-areas .card-head{margin-bottom:var(--sp-1)}
+  .dash-area{display:grid;grid-template-columns:minmax(120px,11rem) minmax(0,1fr) auto 12px;align-items:center;
+    gap:var(--sp-3);width:100%;margin:0;padding:var(--sp-2) var(--sp-1);border:0;border-top:1px solid var(--border);
+    border-radius:0;background:none;box-shadow:none;color:var(--text);font:inherit;text-align:left;cursor:pointer}
+  .dash-area:hover{background:var(--panel2)}
+  .dash-area:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  .dash-area-name{font-size:var(--fs-sm);font-weight:700}
+  .dash-area-detail{font-size:var(--fs-sm);color:var(--muted);min-width:0;overflow-wrap:anywhere}
+  .dash-area-status{justify-self:end}
+  .dash-area-status .pill{white-space:nowrap}
+  .dash-area-go{color:var(--muted);font-size:var(--fs-md);line-height:1}
+  @media(max-width:560px){
+    .dash-area{grid-template-columns:minmax(0,1fr) auto;row-gap:2px}
+    .dash-area-detail{grid-column:1 / -1;grid-row:2}
+    .dash-area-go{display:none}
+  }
+
+  /* Als Nächstes */
+  .dash-next .card-head{margin-bottom:var(--sp-1)}
+  .dash-next-row{display:flex;align-items:baseline;gap:var(--sp-2);padding:var(--sp-2) 0;
+    border-top:1px solid var(--border);font-size:var(--fs-sm);min-width:0}
+  .dash-next-date{flex:none;width:5.5rem;font-size:var(--fs-xs);font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+  .dash-next-text{flex:1;min-width:0;overflow-wrap:anywhere}
+  .dash-next-row .pill{flex:none;white-space:nowrap}
+  .dash-quiet{font-size:var(--fs-sm);color:var(--muted);padding:var(--sp-2) 0;border-top:1px solid var(--border)}
+
+  /* Updates und Aufgaben */
+  .dash-update-form{display:flex;gap:var(--sp-1);flex-wrap:wrap}
+  .dash-update-form input[type="text"]{flex:1 1 140px;min-width:0;margin:0}
+  .dash-update-form select{margin:0;width:auto;flex:none}
+  .dash-update-form button{margin:0;flex:none;min-width:36px}
+  .dash-updates-list{display:flex;flex-direction:column;margin-top:var(--sp-2);max-height:260px;overflow-y:auto}
+  .dash-update-row{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-1) 0;
+    border-top:1px solid var(--border);font-size:var(--fs-sm);min-width:0}
+  .dash-update-text{flex:1;min-width:0;overflow-wrap:anywhere}
+  .dash-update-row.done .dash-update-text{color:var(--muted);text-decoration:line-through}
+  .dash-update-meta{font-size:var(--fs-xs);color:var(--muted);white-space:nowrap;flex:none;
+    font-variant-numeric:tabular-nums}
+  .dash-update-dot{width:8px;height:8px;border-radius:50%;background:var(--accent2);flex:none}
+  .dash-update-toggle{width:18px;height:18px;border-radius:var(--r-sm);border:1px solid var(--field-border);
+    background:var(--panel);flex:none;cursor:pointer;font-size:var(--fs-xs);line-height:1;color:var(--ok);padding:0}
+  .dash-update-toggle.done{background:var(--ok);color:var(--on-accent);border-color:var(--ok)}
+  .dash-update-del{flex:none;border:0;background:transparent;color:var(--muted);cursor:pointer;
+    font-size:15px; /* Ausnahme: Glyphengröße des × */
+    line-height:1;padding:0 2px}
+  .dash-update-del:hover{color:var(--err)}
+  #dpane-uebersicht #gantt-card{margin-top:var(--sp-3)}
+
+  /* ---- Gantt (Prozess-Zeitplan) ---- */
+  #gantt-card>summary.gantt-summary{display:flex;align-items:center;gap:var(--sp-2);
+    padding:var(--sp-3) var(--sp-4);cursor:pointer;user-select:none;list-style:none}
+  #gantt-card>summary.gantt-summary::-webkit-details-marker{display:none}
+  .gantt-caret{color:var(--muted);font-size:var(--fs-sm);transition:transform .15s;flex:none}
+  #gantt-card[open]>summary .gantt-caret{transform:rotate(90deg)}
+  .gantt-summary button{margin:0}
+  .gantt{border:1px solid var(--border-strong);border-radius:var(--r-md);overflow:hidden;background:var(--panel)}
+  .gantt-row{display:flex;align-items:stretch;border-top:1px solid var(--border)}
+  .gantt-row:first-child{border-top:0}
+  .gantt-group{padding:var(--sp-1) var(--sp-3);background:var(--th-bg);font-size:var(--fs-xs);font-weight:800;
+    text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-top:1px solid var(--border)}
+  .gantt-label{flex:none;width:190px;padding:var(--sp-2) var(--sp-3);font-size:var(--fs-sm);font-weight:600;
+    display:flex;align-items:center;gap:var(--sp-1);border-right:1px solid var(--border)}
+  .gantt-label .optional-tag{font-weight:500;color:var(--muted);font-size:var(--fs-xs)}
+  .gantt-track{flex:1;position:relative;min-height:34px}
+  .gantt-header .gantt-track{min-height:24px}
+  .gantt-grid-line{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed var(--border);pointer-events:none}
+  .gantt-grid-label{position:absolute;top:var(--sp-1);font-size:var(--fs-xs);color:var(--muted);font-weight:700;
+    white-space:nowrap;transform:translateX(3px)}
+  .gantt-today-line{position:absolute;top:0;bottom:0;width:0;border-left:1.5px solid var(--err);z-index:3}
+  .gantt-today-label{position:absolute;top:var(--sp-1);font-size:var(--fs-xs);color:var(--err-ink);font-weight:800;
+    transform:translateX(3px)}
+  .gantt-bar{position:absolute;top:var(--sp-2);height:18px;border-radius:var(--r-sm);min-width:6px}
+  .gantt-bar.erledigt{background:var(--ok)}
+  .gantt-bar.laufend{background:repeating-linear-gradient(45deg,var(--warn),var(--warn) 6px,var(--warn-2) 6px,var(--warn-2) 12px)}
+  .gantt-bar.geplant{background:var(--panel2);border:1.5px dashed var(--border-strong)}
+  .gantt-milestone{position:absolute;top:var(--sp-2);width:15px;height:15px;transform:translateX(-7.5px) rotate(45deg);
+    border-radius:2px;background:var(--ok)}
+  .gantt-milestone.geplant{background:var(--panel2);border:1.5px dashed var(--border-strong)}
+  .gantt-legend{display:flex;gap:var(--sp-3);flex-wrap:wrap;padding:var(--sp-2) var(--sp-3);font-size:var(--fs-xs);
+    color:var(--muted);border-top:1px solid var(--border);background:var(--panel2)}
+  .gantt-legend span{display:inline-flex;align-items:center;gap:var(--sp-1)}
+  .gantt-legend i{width:11px;height:11px;border-radius:2px;display:inline-block} /* Ausnahme: Legendenmarke 11px */
+  @media(max-width:720px){ .gantt-label{width:120px;font-size:var(--fs-xs)} }
+
+  /* ---- Map area ---- */
+  #main{display:flex;flex-direction:column;min-height:0;overflow:hidden;background:var(--bg);position:relative}
+  /* Ortssuche schwebt frei über der Karte (statt einer festen Werkzeugleiste darüber) —
+     zentriert oben, mit Rand zu den Leaflet-Ecksteuerelementen (Zoom links, Layer rechts). */
+  .geo-search{position:absolute;top:var(--sp-3);left:50%;transform:translateX(-50%);z-index:1000;
+    width:320px;max-width:calc(100% - 140px)}
+  .geo-search input{width:100%;margin:0;padding:var(--sp-2) var(--sp-3);font-size:var(--fs-base);
+    border:1px solid var(--field-border);border-radius:var(--r-sm);box-shadow:var(--elev-2)}
+  .geo-search-suggestions{position:absolute;z-index:1000;top:calc(100% + var(--sp-1));left:0;right:0;
+    background:var(--panel);border:1px solid var(--border-strong);border-radius:var(--r-md);box-shadow:var(--elev-2);
+    max-height:280px;overflow-y:auto;padding:var(--sp-1)}
+  .geo-search-suggestions.hidden{display:none}
+  .geo-suggestion{padding:var(--sp-2);border-radius:var(--r-sm);cursor:pointer;font-size:var(--fs-sm);line-height:var(--lh-tight)}
+  .geo-suggestion b{font-weight:700}
+  .geo-suggestion span{display:block;color:var(--muted);font-size:var(--fs-xs);margin-top:1px}
+  .geo-suggestion:hover,.geo-suggestion.active{background:var(--accent-soft)}
+  .geo-suggestion.empty{color:var(--muted);cursor:default;padding:var(--sp-2);background:none;border:none;text-align:left}
+  .geo-suggestion.empty::before{content:none}
+  .geo-suggestion.empty:hover{background:none}
+  #map{flex:1;min-height:0;width:100%}
+
+  /* ---- Leaflet overrides (gezielt, keine leaflet-Layoutklassen anfassen) ---- */
+  .leaflet-popup-content-wrapper{border-radius:var(--r-md);box-shadow:var(--elev-2)}
+  .leaflet-popup-content{margin:var(--sp-3) var(--sp-4) !important} /* !important: Leaflet setzt margin inline am Element */
+  .flst-popup{font:var(--fs-sm)/var(--lh-text) 'Plus Jakarta Sans',sans-serif;color:var(--text)}
+  .flst-popup-title{font-weight:800;font-size:var(--fs-base);margin:0 0 var(--sp-2);padding:0 0 var(--sp-1);
+    border-bottom:1px solid var(--border);color:var(--accent2)}
+  .flst-popup table{border-collapse:collapse;width:100%}
+  .flst-popup th,.flst-popup td{text-align:left;vertical-align:top;padding:2px var(--sp-1);border-bottom:1px solid var(--border)}
+  .flst-popup tr:last-child th,.flst-popup tr:last-child td{border-bottom:0}
+  .flst-popup th{color:var(--muted);font-weight:700;white-space:nowrap;width:42%;font-size:var(--fs-xs)}
+  .flst-popup td{color:var(--text);word-break:break-word}
+  .flst-label{pointer-events:none}
+  .flst-label > div{font:700 var(--fs-xs)/1 'Plus Jakarta Sans',sans-serif;color:var(--label-ink);
+    background:var(--label-bg);padding:1px var(--sp-1);border-radius:var(--r-sm);border:1px solid var(--label-border);
+    text-align:center;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.22)}
+  .project-label{pointer-events:none}
+  .project-label > div{position:absolute;transform:translate(-50%,-50%);
+    font:700 var(--fs-xs)/1.1 'Plus Jakarta Sans',sans-serif;color:var(--on-accent);
+    background:var(--accent2);padding:1px var(--sp-1);border-radius:var(--r-sm);border:1px solid rgba(255,255,255,.5);
+    text-align:center;white-space:nowrap;box-shadow:0 1px 4px var(--accent-line)}
+  .leaflet-control-scale-ratio{background:rgba(255,255,255,.85);padding:1px var(--sp-1);margin-top:2px;
+    border-radius:var(--r-sm);font:600 var(--fs-xs)/1.4 'Plus Jakarta Sans',sans-serif;color:var(--text);
+    box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .leaflet-control-layers{background:var(--panel);color:var(--text);border:1px solid var(--border-strong);
+    border-radius:var(--r-md);font-size:var(--fs-sm);box-shadow:var(--elev-1);font-family:'Plus Jakarta Sans',sans-serif}
+  .leaflet-control-layers-expanded{padding:var(--sp-2) var(--sp-3)}
+  .leaflet-control-layers label{color:var(--text);margin:2px 0;font-weight:500}
+  .leaflet-control-layers-separator{border-top-color:var(--border)}
+  .leaflet-bar a{border-radius:0}
+  .leaflet-touch .leaflet-bar{border-radius:var(--r-sm);overflow:hidden}
+
+  /* ---- Views ---- */
+  .view{flex:1;min-height:0}
+  .view.hidden{display:none !important} /* !important: schlägt die display-Regeln der View-Klassen */
+  #view-list{overflow-y:auto}
+  #view-map{display:flex;flex-direction:column}
+  /* Startseite als 3-Spalten-Dashboard: Filter-Sidebar | Projektliste | Kalender & Fristen. */
+  .list-wrap{max-width:none;margin:0;padding:var(--sp-5) var(--sp-5) var(--sp-7);
+    display:grid;gap:var(--sp-5);align-items:start;
+    /* Kalenderspalte in der Breite verstellbar (--cal-w, per Griff gesetzt). clamp hält sie zwischen
+       260 px und so breit, dass der Projektliste noch ~400 px bleiben — auch beim Verkleinern des Fensters. */
+    grid-template-columns:250px minmax(0,1fr) clamp(260px, var(--cal-w, 330px), max(260px, calc(100% - 700px)))}
+  .list-side{position:sticky;top:0;max-height:calc(100vh - 100px);overflow-y:auto;scrollbar-width:thin;min-width:0}
+  .list-cal{position:sticky;top:0;max-height:calc(100vh - 100px);min-width:0;display:flex}
+  .list-cal-inner{flex:1;min-width:0;overflow-y:auto;scrollbar-width:thin}
+  /* Griff: schmale Leiste links an der Spalte, liegt in der Rasterlücke */
+  .cal-resizer{flex:none;width:12px;margin-left:-16px;margin-right:4px;cursor:col-resize;position:relative;touch-action:none}
+  .cal-resizer::after{content:'';position:absolute;top:0;bottom:0;left:5px;width:2px;border-radius:2px;background:transparent;transition:background .12s}
+  .cal-resizer:hover::after,.cal-resizer:focus-visible::after,.cal-resizer.ziehen::after{background:var(--accent)}
+  .cal-resizer:focus-visible{outline:none}
+  body.cal-ziehen{cursor:col-resize;user-select:none}
+  .side-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--sp-4)}
+  .side-title{font-size:var(--fs-xs);font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 var(--sp-3)}
+  .list-side input[type=search]{width:100%;background:var(--panel);color:var(--text);
+    border:1px solid var(--field-border);border-radius:var(--r-sm);padding:var(--sp-2) var(--sp-3);
+    font-size:var(--fs-base);font-family:inherit;margin-bottom:var(--sp-3);transition:border-color .15s,box-shadow .15s}
+  .list-side input[type=search]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .side-check{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-sm);font-weight:600;color:var(--text);
+    margin:0 0 var(--sp-3);cursor:pointer}
+  .side-check input{width:auto;margin:0;accent-color:var(--accent)}
+  .filter-count{display:block;font-size:var(--fs-xs);color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+  .list-cal .side-card{margin-bottom:var(--sp-3)}
+  .list-main{min-width:0}
+  #project-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:var(--sp-3)}
+  #project-list .empty{grid-column:1/-1}
+  .project-card{display:flex;gap:var(--sp-4);align-items:flex-start;flex-wrap:wrap;margin-bottom:0}
+  .project-card-map{flex:none;width:84px}
+  .project-card-body{flex:1;min-width:0}
+  .project-card h3{flex-wrap:wrap;row-gap:var(--sp-1)}
+  /* auto-fit: bei schmaler Karte rutschen Kennzahlen in die nächste Zeile, statt Zahlen/Wörter zu zerreißen */
+  .project-card .kpis{margin-bottom:var(--sp-2);grid-template-columns:repeat(auto-fit,minmax(92px,1fr))}
+  .project-card .kpi b{white-space:nowrap}
+  .project-card .meta{display:flex;justify-content:space-between;gap:var(--sp-2);flex-wrap:wrap}
+  .project-card .project-more{margin:0 0 var(--sp-2)}
+  .project-card .actions{margin-top:var(--sp-3)}
+  @media(max-width:520px){ .project-card .kpis{grid-template-columns:1fr 1fr} }
+  /* Umschalter Kacheln / Liste in der Filter-Seitenleiste */
+  .side-label{font-size:var(--fs-sm);font-weight:700;color:var(--muted);margin:0 0 var(--sp-1)}
+  .ansicht-toggle{display:flex;padding:2px;margin:0 0 var(--sp-3);background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-sm)}
+  .ansicht-toggle button{flex:1;margin:0;padding:var(--sp-1) var(--sp-2);font-size:var(--fs-sm);font-weight:700;
+    background:transparent;color:var(--muted);border:1px solid transparent;border-radius:var(--r-sm);box-shadow:none}
+  .ansicht-toggle button:hover{background:var(--panel);color:var(--text);border-color:transparent}
+  .ansicht-toggle button[aria-pressed="true"]{background:var(--panel);color:var(--accent-ink);border-color:var(--border-strong)}
+  /* Listenansicht: eine Tabelle statt Kachel-Raster. Schmale Spalte (Container) blendet
+     Leistung und Änderungsdatum aus, damit nichts über den Rand läuft. */
+  .list-main{container-type:inline-size}
+  #project-list.als-liste{display:block}
+  .project-table-wrap{padding:0;overflow:hidden}
+  .project-table th{background:var(--th-bg)}
+  .project-table th.sortierbar{cursor:pointer;user-select:none}
+  .project-table th.sortierbar:hover{color:var(--text)}
+  .project-table td{vertical-align:middle}
+  .project-table tr:last-child>td{border-bottom:0}
+  .project-row{cursor:pointer}
+  .project-row:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+  .project-table td:first-child{min-width:12rem}
+  .project-table .col-phase{width:11rem}
+  .project-table .col-groesse{width:5.5rem}
+  .project-table .col-leistung{width:7.5rem;font-size:var(--fs-xs)}
+  .project-table .col-frist{width:8.5rem}
+  .project-table .col-geaendert{width:6rem;white-space:nowrap;color:var(--muted)}
+  .project-table .col-aktion{width:2.5rem;text-align:right}
+  .project-table .col-aktion button{margin:0;padding:0 var(--sp-2)}
+  .project-table .pill{white-space:normal}
+  @container (max-width:820px){ .project-table .col-geaendert{display:none} }
+  @container (max-width:680px){ .project-table .col-leistung{display:none} }
+  @container (max-width:520px){ .project-table .col-phase{display:none} }
+  @media(max-width:1400px){ .list-wrap{grid-template-columns:230px minmax(0,1fr) clamp(260px, var(--cal-w, 300px), max(260px, calc(100% - 680px)))} }
+  @media(max-width:1150px){
+    .list-wrap{grid-template-columns:230px minmax(0,1fr)}
+    .list-cal{grid-column:2;position:static;max-height:none}
+    .cal-resizer{display:none} /* Kalender liegt hier unter der Liste und nutzt deren volle Breite */
+  }
+  @media(max-width:760px){
+    .list-wrap{grid-template-columns:1fr;padding:var(--sp-3) var(--sp-3) var(--sp-7)}
+    .list-side,.list-cal{position:static;max-height:none;grid-column:auto}
+    .cal-resizer{display:none}
+  }
+  /* Kalender in der Startseiten-Spalte: Darstellung je Stufe (data-cal-mode, gesetzt nach gemessener Breite) */
+  .list-cal .cal-head{flex-wrap:wrap;gap:var(--sp-1)}
+  .list-cal .cal-title{min-width:0;flex:1;font-size:var(--fs-base)}
+  [data-cal-mode="klein"] .cal-day{min-height:34px;padding:2px var(--sp-1);border-radius:var(--r-sm)}
+  [data-cal-mode="mittel"] .cal-day{min-height:58px;padding:2px var(--sp-1)}
+  [data-cal-mode="gross"] .cal-day{min-height:72px}
+  [data-cal-mode="xl"] .cal-day{min-height:92px}
+  /* stretch: untereinander müssen Raster und Tagesliste die volle Breite nutzen (sonst schrumpfen sie auf ihren Inhalt) */
+  [data-cal-mode="klein"] .cal-body,[data-cal-mode="mittel"] .cal-body{flex-direction:column;align-items:stretch;gap:var(--sp-2)}
+  [data-cal-mode="klein"] .cal-daylist,[data-cal-mode="mittel"] .cal-daylist{width:auto;border-left:none;padding-left:0;min-height:0;
+    border-top:1px dashed var(--border);padding-top:var(--sp-2)}
+  [data-cal-mode="gross"] .cal-daylist{width:220px}
+  [data-cal-mode="xl"] .cal-daylist{width:280px}
+  #global-kalender{width:100%}
+  .cal-dots{display:flex;gap:2px;flex-wrap:wrap;align-items:center;margin-top:2px}
+  .cal-dots i{width:6px;height:6px;border-radius:50%;display:block;background:var(--ev-color,var(--accent))}
+  .cal-dots b{font-size:var(--fs-xs);line-height:1;color:var(--muted)}
+
+  /* ---- Kalender ---- */
+  .cal-head{display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-2)}
+  .cal-head .cal-title{font-size:var(--fs-md);font-weight:800;min-width:150px;text-align:center}
+  .cal-head button{margin:0}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+  .cal-dow{text-align:center;font-size:var(--fs-xs);font-weight:700;color:var(--muted);
+    padding:0 0 var(--sp-1);text-transform:uppercase;letter-spacing:.04em}
+  .cal-day{min-height:74px;background:var(--inner);border:1px solid var(--border);border-radius:var(--r-sm);
+    padding:var(--sp-1);font-size:var(--fs-xs);cursor:pointer;transition:border-color .12s;overflow:hidden}
+  .cal-day:hover{border-color:var(--border-strong)}
+  .cal-day.out{background:var(--panel2);opacity:.55}
+  .cal-day.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-line)}
+  .cal-day.selected{border-color:var(--accent);background:var(--accent-soft)}
+  .cal-day .d{font-weight:800;font-size:var(--fs-xs);color:var(--muted);margin-bottom:2px;
+    font-variant-numeric:tabular-nums}
+  .cal-day.today .d{color:var(--accent-ink)}
+  .cal-ev{display:flex;align-items:center;gap:var(--sp-1);margin-bottom:2px;padding:0 var(--sp-1);
+    border-radius:var(--r-sm);background:var(--panel2);font-size:var(--fs-xs);font-weight:600;
+    white-space:nowrap;overflow:hidden;min-width:0}
+  .cal-ev>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .cal-ev i{flex:none;width:6px;height:6px;border-radius:50%;background:var(--ev-color,var(--accent))}
+  .cal-ev.more{background:none;color:var(--muted);font-weight:700}
+  .cal-body{display:flex;gap:var(--sp-4);align-items:flex-start}
+  .cal-body .cal-grid{flex:1;min-width:0}
+  .cal-daylist{flex:none;width:250px;border-left:1px dashed var(--border);padding-left:var(--sp-3);min-height:120px}
+  .cal-daylist .frist-row{align-items:flex-start;flex-wrap:wrap}
+  .cal-daylist .ev-dot{flex:none;width:8px;height:8px;border-radius:50%;margin-top:var(--sp-1);background:var(--ev-color,var(--accent))}
+  @media(max-width:900px){ .cal-body{flex-direction:column;align-items:stretch} .cal-daylist{width:auto;border-left:none;padding-left:0;border-top:1px dashed var(--border);padding-top:var(--sp-2);min-height:0} }
+  .cal-add{margin-top:var(--sp-2);padding-top:var(--sp-2);border-top:1px dashed var(--border);
+    display:flex;flex-direction:column;gap:var(--sp-1)}
+  .cal-add input, .cal-add select{margin:0;font-size:var(--fs-sm)}
+  .cal-add button{margin:0;align-self:flex-start}
+
+  /* ---- „Weiter bei"-Chip ---- */
+  .resume-chip{display:none;align-items:center;gap:var(--sp-2);margin:0 0 var(--sp-3);
+    padding:var(--sp-2) var(--sp-3);background:var(--accent-soft);
+    border:1px solid var(--accent-line);border-radius:var(--r-md);font-size:var(--fs-sm);font-weight:600;
+    cursor:pointer;transition:filter .12s}
+  .resume-chip:hover{filter:brightness(.97)}
+  .resume-chip b{color:var(--accent2)}
+
+  /* ---- Speicher-Feedback ---- */
+  #save-toast{position:fixed;right:var(--sp-4);bottom:var(--sp-4);z-index:9000;padding:var(--sp-1) var(--sp-3);
+    border-radius:var(--r-sm);background:var(--text);color:var(--on-accent);font-size:var(--fs-sm);font-weight:700;
+    opacity:0;pointer-events:none;transform:translateY(6px);transition:opacity .2s,transform .2s}
+  #save-toast.show{opacity:.94;transform:translateY(0)}
+  .cal-legend{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-2);font-size:var(--fs-xs);
+    font-weight:600;color:var(--muted)}
+  .cal-legend span{display:flex;align-items:center;gap:var(--sp-1)}
+  .cal-legend i{width:7px;height:7px;border-radius:50%;display:inline-block}
+  @media(max-width:700px){ .cal-day{min-height:52px} .cal-ev{display:none} .cal-ev.more,.cal-day .d{display:block} }
+
+  /* ---- Kommunikationslog ---- */
+  .komm-entry{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-sm);
+    padding:var(--sp-3);margin-bottom:var(--sp-2)}
+  .komm-entry .komm-top{display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap;margin-bottom:var(--sp-2)}
+  .komm-entry .komm-top input[type="date"]{margin:0;width:144px}
+  .komm-entry .komm-top select{margin:0;width:auto}
+  .komm-entry .komm-top input[type="text"]{margin:0;flex:1;min-width:140px}
+  .komm-entry textarea{margin:0;min-height:44px;font-size:var(--fs-sm)}
+
+  /* ---- Login ---- */
+  #view-login{position:fixed;inset:0;z-index:10000;background:var(--bg);
+    display:flex;align-items:center;justify-content:center;padding:var(--sp-5)}
+  #view-login.hidden{display:none}
+  .login-card{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--border);
+    border-radius:var(--r-md);box-shadow:var(--elev-2);padding:var(--sp-6) var(--sp-5) var(--sp-5)}
+  .login-card .login-brand{display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-5)}
+  .login-card h1{margin:0;font-size:var(--fs-lg);font-weight:800;letter-spacing:-.01em}
+  .login-card .login-sub{margin:2px 0 0;color:var(--muted);font-size:var(--fs-sm);font-weight:500}
+  .login-card label{display:block;font-size:var(--fs-sm);font-weight:700;color:var(--muted);margin:0 0 var(--sp-3)}
+  .login-card input[type="text"], .login-card input[type="password"]{display:block;width:100%;margin-top:var(--sp-1);
+    padding:var(--sp-2) var(--sp-3);font:inherit;font-size:var(--fs-base);color:var(--text);background:var(--inner);
+    border:1px solid var(--field-border);border-radius:var(--r-sm);outline:none}
+  .login-card input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .login-remember{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-sm);font-weight:600;color:var(--text);
+    margin:0 0 var(--sp-4);cursor:pointer;user-select:none}
+  .login-remember input{accent-color:var(--accent)}
+  .login-card button[type="submit"]{width:100%;padding:var(--sp-2);font:inherit;font-size:var(--fs-base);font-weight:700;
+    color:var(--on-accent);background:var(--accent2);border:1px solid var(--accent2);border-radius:var(--r-sm);cursor:pointer}
+  .login-card button[type="submit"]:hover{background:var(--accent-ink);border-color:var(--accent-ink)}
+  .login-error{display:none;margin:0 0 var(--sp-3);padding:var(--sp-2) var(--sp-3);font-size:var(--fs-sm);font-weight:600;
+    color:var(--err-ink);background:var(--err-soft);border:1px solid var(--err-line);border-radius:var(--r-sm)}
+  .login-error.show{display:block}
+  .login-hint{margin:var(--sp-4) 0 0;padding-top:var(--sp-3);border-top:1px dashed var(--border);
+    color:var(--muted);font-size:var(--fs-xs);line-height:var(--lh-text)}
+  .login-hint code{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-sm);
+    padding:1px var(--sp-1);font-size:var(--fs-xs)}
+
+  /* ---- Info-Button mit Popover ----
+     Ersetzt die Hinweiskästen (.pane-hint), die den Blick auf die eigentlichen Eingaben
+     verstellt haben. Bewusst ein Popover statt title=: Tooltips sind auf Touch-Geräten nicht
+     erreichbar, brechen keine Zeilen um und verschwinden beim Lesen langer Texte. */
+  .info-btn{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;
+    padding:0;margin:0 0 0 var(--sp-1);border-radius:50%;border:1px solid var(--field-border);
+    background:var(--panel);color:var(--muted);font-size:var(--fs-xs);font-weight:800;line-height:1;
+    cursor:help;vertical-align:middle;flex:none;font-family:inherit;box-shadow:none}
+  .info-btn:hover,.info-btn[aria-expanded="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+  .info-btn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  #info-pop{position:fixed;z-index:9500;max-width:340px;max-height:min(60vh,420px);overflow-y:auto;
+    padding:var(--sp-3);border-radius:var(--r-md);
+    background:var(--panel);border:1px solid var(--border-strong);box-shadow:var(--elev-2);
+    font-size:var(--fs-sm);line-height:var(--lh-text);color:var(--text);font-weight:500}
+  #info-pop.hidden{display:none}
+  #info-pop b{font-weight:800}
+  #info-pop code{font-size:var(--fs-xs);background:var(--panel2);padding:1px var(--sp-1);border-radius:var(--r-sm)}
+
+  /* ---- Aufklapp-Abschnitt ----
+     Trägt im geschlossenen Zustand seinen Status in der Kopfzeile, damit man zum Nachsehen
+     nicht aufklappen muss — nur zum Bearbeiten. */
+  .fold{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);
+    margin-bottom:var(--sp-2);overflow:hidden}
+  .fold > summary{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-3);cursor:pointer;
+    list-style:none;font-size:var(--fs-base);font-weight:700;color:var(--text)}
+  .fold > summary::-webkit-details-marker{display:none}
+  .fold > summary::before{content:'›';font-size:16px; /* Ausnahme: Glyphengröße des Pfeils */
+    line-height:1;color:var(--muted);transition:transform .15s;flex:none;width:10px}
+  .fold[open] > summary::before{transform:rotate(90deg)}
+  .fold > summary:hover{background:var(--panel2)}
+  .fold-title{flex:1;min-width:0}
+  .fold-status{font-weight:600;font-size:var(--fs-xs);color:var(--muted);display:flex;align-items:center;
+    gap:var(--sp-1);flex-wrap:wrap}
+  .fold-body{padding:0 var(--sp-4) var(--sp-4);border-top:1px solid var(--border)}
+  .fold-body > *:first-child{margin-top:var(--sp-3)}
+
+  /* ---- Verfahrens-Assistent ---- */
+  .vw-step{display:flex;flex-direction:column;gap:var(--sp-1)}
+  .vw-step > label:first-child{margin-top:0;font-size:var(--fs-base)}
+  .vw-opt{display:flex;gap:var(--sp-2);align-items:flex-start;margin:0;padding:var(--sp-2) var(--sp-3);
+    border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;transition:border-color .12s,background .12s}
+  .vw-opt:hover{border-color:var(--border-strong)}
+  .vw-opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+  .vw-opt input{width:auto;margin:2px 0 0 0}
+  .vw-opt b{font-size:var(--fs-base)}
+  .vw-desc{margin:var(--sp-1) 0 0 0;color:var(--muted);font-size:var(--fs-xs);font-weight:500;line-height:var(--lh-text)}
+  .vw-note{margin:0;padding:var(--sp-2) var(--sp-3);border-radius:var(--r-sm);font-size:var(--fs-sm);
+    line-height:var(--lh-text);background:var(--accent-soft);border-left:3px solid var(--accent)}
+  .vw-note.warn{background:var(--warn-soft);border-left-color:var(--warn)}
+
+  /* ---- Aktivitätslog-Overlay ---- */
+  .act-overlay{position:fixed;inset:0;z-index:9000;background:var(--scrim);
+    display:flex;align-items:flex-start;justify-content:center;padding:var(--sp-7) var(--sp-4) var(--sp-5)}
+  .act-overlay.hidden{display:none}
+  .act-panel{width:100%;max-width:760px;max-height:calc(100vh - 90px);display:flex;flex-direction:column;
+    background:var(--panel);border:1px solid var(--border-strong);border-radius:var(--r-md);
+    box-shadow:var(--elev-2);overflow:hidden}
+  .act-head{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);
+    padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--border)}
+  .act-head strong{font-size:var(--fs-md);font-weight:800}
+  .act-sub{color:var(--muted);font-size:var(--fs-sm);font-weight:600;margin-left:var(--sp-2)}
+  .act-filters{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);
+    border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .act-filters select,.act-filters input{margin:0;font:inherit;font-size:var(--fs-sm);padding:var(--sp-1) var(--sp-2);
+    border:1px solid var(--field-border);border-radius:var(--r-sm);background:var(--panel);color:var(--text)}
+  .act-filters input[type="search"]{flex:1;min-width:120px}
+  .act-filters .spacer{flex:1}
+  .act-list{overflow-y:auto;padding:var(--sp-1) 0}
+  .act-day{font-size:var(--fs-xs);font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);
+    padding:var(--sp-3) var(--sp-4) var(--sp-1)}
+  .act-row{display:flex;align-items:baseline;gap:var(--sp-2);padding:var(--sp-1) var(--sp-4);font-size:var(--fs-sm);
+    line-height:var(--lh-text);border-bottom:1px solid var(--border)}
+  .act-row:last-child{border-bottom:0}
+  .act-time{flex-shrink:0;color:var(--muted);font-variant-numeric:tabular-nums;font-size:var(--fs-xs);width:44px}
+  .act-user{flex-shrink:0;display:inline-flex;align-items:center;gap:var(--sp-1);font-weight:700;font-size:var(--fs-xs);
+    padding:0 var(--sp-2) 0 2px;border-radius:var(--r-full);
+    background:var(--accent-soft);color:var(--accent-ink);border:1px solid var(--accent-line)}
+  /* 18px statt 16px, damit die Initialen bei 11px (Mindestgröße) noch Platz haben. */
+  .act-avatar{width:18px;height:18px;font-size:var(--fs-xs);letter-spacing:-.04em}
+  .act-body{flex:1;min-width:0}
+  .act-proj{font-weight:700;color:var(--accent2);cursor:pointer;text-decoration:none}
+  .act-proj:hover{text-decoration:underline}
+  .act-action{color:var(--text)}
+  .act-empty{padding:var(--sp-6) var(--sp-4);text-align:center;color:var(--muted);font-size:var(--fs-base)}
+  .vt-body{overflow-y:auto;padding:var(--sp-3) var(--sp-4)}
+  .vt-field{margin-bottom:var(--sp-2)}
+  .vt-field label{display:block;font-size:var(--fs-sm);font-weight:700;color:var(--muted);margin-bottom:var(--sp-1)}
+  .vt-field input{width:100%;margin:0}
+  .vt-empty{color:var(--muted);font-size:var(--fs-base);padding:var(--sp-1) 0}
+  .vt-actions{display:flex;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);border-top:1px solid var(--border)}
+  .vorlage-row{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) 0;border-bottom:1px solid var(--border)}
+  .vorlage-row:last-child{border-bottom:0}
+  .vorlage-row .vorlage-main{flex:1;min-width:0}
+  .vorlage-row .vorlage-name{font-weight:700;font-size:var(--fs-base)}
+  .vorlage-row .vorlage-felder{color:var(--muted);font-size:var(--fs-xs);margin-top:2px}
+
+  /* ---- Boot-Ladeanzeige (Session-Check / Supabase-Hydration) ---- */
+  #boot-loading{position:fixed;inset:0;z-index:10001;background:var(--bg);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--sp-3)}
+  #boot-loading.hidden{display:none}
+  #boot-loading p{margin:0;color:var(--muted);font-size:var(--fs-base);font-weight:600}
+  .boot-spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--border);
+    border-top-color:var(--accent);animation:boot-spin .8s linear infinite}
+  @keyframes boot-spin{to{transform:rotate(360deg)}}
+
+  /* Generische Sichtbarkeits-Utility. Steht bewusst am Ende und mit !important, damit es
+     die display-Regeln der Komponentenklassen (.info, .grid2, …) sicher schlägt. */
+  .hidden{display:none !important}
+
+  /* ---- Vertragsmanagement (Grundstück → Verträge) ---- */
+  .linklike{border:0;background:none;box-shadow:none;padding:0;margin:0;font:inherit;color:var(--accent2);
+    font-weight:700;cursor:pointer;text-align:left}
+  .linklike:hover{text-decoration:underline}
+  .vt-filter{display:flex;flex-wrap:wrap;gap:var(--sp-1);margin:0 0 var(--sp-3)}
+  .vt-chip{margin:0;padding:var(--sp-1) var(--sp-2);border-radius:var(--r-full);border:1px solid var(--border);
+    background:var(--panel);color:var(--muted);font-size:var(--fs-xs);font-weight:700;cursor:pointer;box-shadow:none}
+  .vt-chip span{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:600}
+  .vt-chip.active{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink)}
+  .vt-typ{display:inline-block;font-size:var(--fs-xs);font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--muted);background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-sm);padding:0 var(--sp-1)}
+  .vt-az{font-size:var(--fs-xs);color:var(--muted);font-variant-numeric:tabular-nums}
+  .vt-fehlt{margin-top:var(--sp-1)}
+  .vt-steps{display:flex;gap:2px;margin-top:var(--sp-1);max-width:7rem}
+  .vt-steps i{flex:1;height:4px;border-radius:2px;background:var(--border)}
+  .vt-steps i.on{background:var(--ok)}
+  /* Eckdaten (aufgeklappte Zeile): Gruppen nebeneinander, brechen bei wenig Platz um */
+  .vt-eck{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--sp-3) var(--sp-4)}
+  .vt-eck h4{margin:0 0 var(--sp-1);font-size:var(--fs-xs);font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .vt-kv{display:flex;justify-content:space-between;gap:var(--sp-2);padding:2px 0;border-bottom:1px dashed var(--border);font-size:var(--fs-sm)}
+  .vt-kv span{color:var(--muted);flex:none}
+  .vt-kv b{font-weight:700;text-align:right;min-width:0;overflow-wrap:anywhere}
+  .vt-verlauf{margin:0;padding-left:1.1em;font-size:var(--fs-sm);line-height:var(--lh-text)}
+  .vt-notiz{font-size:var(--fs-sm);white-space:pre-wrap;overflow-wrap:anywhere}
+  .vt-dateien{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-2);font-size:var(--fs-sm)}
+  /* Eingabemaske */
+  .vtm-panel{max-width:880px}
+  .vtm-sec{padding:var(--sp-3) 0;border-top:1px solid var(--border)}
+  .vtm-sec:first-child{border-top:0;padding-top:0}
+  .vtm-sec h3{margin:0 0 var(--sp-2);font-size:var(--fs-base);font-weight:800}
+  .vtm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:var(--sp-2) var(--sp-3);align-items:start}
+  .vtm-f{min-width:0}
+  .vtm-f.breit{grid-column:1 / -1}
+  .vtm-f label{display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;margin:0 0 var(--sp-1);font-size:var(--fs-sm)}
+  .vtm-f input[type=text],.vtm-f input[type=number],.vtm-f input[type=date],.vtm-f select,.vtm-f textarea{margin:0;width:100%;min-width:0;max-width:none}
+  .vtm-f small{display:block;margin-top:2px;font-size:var(--fs-xs);color:var(--muted)}
+  .vtm-warn{color:var(--warn-ink);font-weight:700}
+  .vtm-inline{display:flex;align-items:center;gap:var(--sp-1)}
+  .vtm-inline>input{flex:1 1 0;min-width:0}
+  .vtm-inline>select{flex:1 1 0;min-width:0}
+  .vtm-inline>span{flex:none;color:var(--muted);font-size:var(--fs-sm)}
+  .vtm-calc{align-self:end;display:flex;flex-direction:column;gap:2px;padding:var(--sp-2) var(--sp-3);background:var(--panel2);
+    border:1px solid var(--border);border-radius:var(--r-sm)}
+  .vtm-calc span{font-size:var(--fs-xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .vtm-calc b{font-size:var(--fs-base);font-weight:800;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .vtm-checks{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-3);max-height:220px;overflow-y:auto;padding:var(--sp-2);
+    border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel)}
+  .vtm-flst{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+  .vtm-check{display:flex;align-items:flex-start;gap:var(--sp-1);margin:0;font-size:var(--fs-sm);font-weight:500;color:var(--text);cursor:pointer;min-width:0}
+  .vtm-check input{width:auto;margin:2px 0 0;flex:none}
+  .vtm-check span{min-width:0;overflow-wrap:anywhere}
+  .vtm-check.belegt span{color:var(--muted)}
+  .vtm-dateien{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2)}
+
+  /* ---- Kostenerfassung (Reiter Kosten) ---- */
+  #dpane-kosten{position:relative}
+  .kosten-bezug{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2) var(--sp-4);margin:0 0 var(--sp-3);font-size:var(--fs-sm)}
+  .kosten-bezug-label{font-size:var(--fs-xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .kosten-bezug label{display:flex;align-items:center;gap:var(--sp-1);margin:0;font-weight:700}
+  .kosten-bezug input[type=number]{width:120px;margin:0;padding:var(--sp-1) var(--sp-2)}
+  .kpis.kosten-kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:0}
+  .kosten-kpis .kpi small{font-size:var(--fs-xs);color:var(--muted);font-weight:600;overflow-wrap:anywhere}
+  .kosten-kpis .kosten-kpi-spez{background:var(--panel);border-color:var(--border-strong)}
+  .kosten-kpis .kosten-kpi-spez b{color:var(--tab-ink,var(--text))}
+  .kosten-kpis .kosten-kpi-err{border-color:var(--err-line);background:var(--err-soft)}
+  .kosten-err{color:var(--err-ink);font-weight:700}
+  .kosten-hinweis{font-size:var(--fs-xs);color:var(--muted);font-weight:600}
+  #kosten-suche{width:auto;min-width:220px;max-width:340px;margin:0;padding:var(--sp-1) var(--sp-2);font-size:var(--fs-sm)}
+  .kosten-kat-row,.kosten-row{cursor:pointer}
+  .kosten-kat-row.aktiv>td{background:var(--accent-soft)}
+  .kosten-bar{display:inline-block;vertical-align:middle;width:calc(100% - 3.2rem);max-width:160px;height:6px;
+    border-radius:var(--r-full);background:var(--border);overflow:hidden;margin-right:var(--sp-2)}
+  .kosten-bar b{display:block;height:100%;background:var(--area-kosten);border-radius:var(--r-full)}
+  .kosten-anteil{font-size:var(--fs-xs);color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+  .gs-table tr.kosten-summe>td{font-weight:800;border-top:1px solid var(--border-strong);border-bottom:0;background:var(--panel2)}
+  .kosten-typ-bescheid{color:var(--area-genehm-ink);border-color:var(--area-genehm);background:var(--panel)}
+  .kosten-table .pill{white-space:nowrap}
+  .kosten-datei{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-xs)}
+  /* Drag & Drop: gestrichelter Rahmen über dem ganzen Reiter, Hinweis oben */
+  .kosten-drop-hint{display:none}
+  #dpane-kosten.kosten-drop{outline:2px dashed var(--area-kosten);outline-offset:var(--sp-1);border-radius:var(--r-md)}
+  #dpane-kosten.kosten-drop .kosten-drop-hint{display:block;position:sticky;top:0;z-index:5;margin:0 0 var(--sp-2);
+    padding:var(--sp-2) var(--sp-3);border-radius:var(--r-sm);background:var(--area-kosten);color:var(--on-accent);
+    font-weight:700;text-align:center;pointer-events:none}
+
+  /* ---- Kompakte Dichte im Bearbeitungsbereich (Projekt-Reiter und Vertrags-Maske) ----
+     Die Design-Tokens werden hier kleiner definiert; alle Komponenten, die sie nutzen
+     (Karten, Tabellen, Felder, Abstände), werden dadurch gleichmäßig dichter. Untergrenze
+     der Schrift 10,5 px, damit Tabellenköpfe und Pills lesbar bleiben. */
+  .detail-main, #view-vertrag, #view-kosten{
+    --fs-xs:10.5px; --fs-sm:11.5px; --fs-base:12.5px; --fs-md:14px; --fs-lg:17px; --fs-xl:22px;
+    --lh-text:1.45;
+    --sp-1:3px; --sp-2:6px; --sp-3:9px; --sp-4:12px; --sp-5:16px; --sp-6:24px; --sp-7:32px;
+    font-size:var(--fs-base);
+  }
+  .detail-main .gs-table input[type=text],.detail-main .gs-table input[type=email],.detail-main .gs-table input[type=number],
+  .detail-main .gs-table input[type=date],.detail-main .gs-table select{height:26px}
+  .detail-main .gs-table textarea.gs-grow{min-height:26px;padding:3px var(--sp-2)}

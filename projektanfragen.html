@@ -1,0 +1,1166 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Wattfolio — Projektentwicklung im Überblick</title>
+<meta name="robots" content="noindex,nofollow" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+
+<link rel="stylesheet" href="css/app.css" />
+
+<script>
+// Entwicklungsmodus: kein Login, kein Supabase-Sync (reiner localStorage-Modus), und nach
+// einem Reload geht es im zuletzt offenen Projekt/Reiter weiter. Greift ausschließlich
+// lokal (localhost/127.0.0.1/file://) — auf einer echten Domain gilt immer der Login.
+// Lokal per URL abschaltbar: ?dev=0 (echter Supabase-Login zum Testen).
+// Öffentliche Demo (?demo=1, sowie automatisch auf *.github.io — dort liegt nur die Demo):
+// derselbe Modus ohne Login und ohne Supabase, mit Demo-Projekten im Browser des Betrachters.
+// Echte Daten sind so nie erreichbar — es wird gar kein Supabase-Client erzeugt.
+(function(){
+  const q = new URLSearchParams(location.search);
+  const lokal = ['localhost','127.0.0.1','[::1]',''].includes(location.hostname);
+  window.PA_DEMO = q.get('demo') === '1' || location.hostname.endsWith('.github.io');
+  window.PA_DEV_MODE = window.PA_DEMO || (lokal && q.get('dev') !== '0');
+  if(window.PA_DEMO) document.documentElement.classList.add('pa-demo');
+})();
+</script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+</head>
+<body>
+
+<div id="boot-loading"><div class="boot-spinner"></div><p>Lädt &hellip;</p></div>
+
+<div id="view-login" class="hidden">
+  <form class="login-card" id="login-form" autocomplete="off">
+    <div class="login-brand">
+      <div class="brand-mark"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><polygon points="28,10 50,10 44,21 22,21" fill="#ffffff"/><polygon points="21,25 43,25 37,36 15,36" fill="#e0d33b"/><polygon points="14,40 32,40 26,51 8,51" fill="#ffffff"/></svg></div>
+      <div>
+        <h1>Wattfolio</h1>
+        <p class="login-sub">Anmeldung</p>
+      </div>
+    </div>
+    <p class="login-error" id="login-error">Benutzername oder Passwort falsch.</p>
+    <label><span id="login-user-label">Benutzername</span>
+      <input type="text" id="login-user" autocomplete="username" autofocus />
+    </label>
+    <label>Passwort
+      <input type="password" id="login-pass" autocomplete="current-password" />
+    </label>
+    <label class="login-remember" id="login-remember-row">
+      <input type="checkbox" id="login-remember" /> Angemeldet bleiben
+    </label>
+    <button type="submit">Anmelden</button>
+    <p class="login-hint" id="login-hint">Testzugang: Benutzer <code>test</code>, Passwort <code>test123</code></p>
+  </form>
+</div>
+<script src="js/login.js"></script>
+
+<header id="app-header">
+  <div class="brand" id="nav-brand" title="Zur Projektliste">
+    <div class="brand-mark"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><polygon points="28,10 50,10 44,21 22,21" fill="#ffffff"/><polygon points="21,25 43,25 37,36 15,36" fill="#e0d33b"/><polygon points="14,40 32,40 26,51 8,51" fill="#ffffff"/></svg></div>
+    <h1>Wattfolio</h1>
+  </div>
+  <div class="nav-item" id="nav-list">Projekte</div>
+  <div class="nav-item" id="nav-map">Karte</div>
+  <div id="project-tabs" title="Geöffnete Projekte — als Tabs. Klick wechselt, × schließt."></div>
+  <span class="spacer"></span>
+  <span class="demo-hinweis" id="demo-hinweis" title="Öffentliche Demo: Alle Daten sind Beispieldaten und bleiben nur in diesem Browser gespeichert.">Demo · Daten nur in diesem Browser</span>
+  <button id="btn-new-project">+ Neues Projekt</button>
+  <button id="btn-activity" class="secondary" title="Aktivitätslog — wer hat wann was geändert">Aktivität</button>
+  <div class="glocke" id="glocke">
+    <button type="button" id="btn-glocke" class="glocke-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="glocke-panel" aria-label="Benachrichtigungen" title="Benachrichtigungen und Erinnerungen">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="glocke-badge hidden" id="glocke-badge"></span>
+    </button>
+    <div class="glocke-panel hidden" id="glocke-panel" role="dialog" aria-label="Benachrichtigungen und Erinnerungen"></div>
+  </div>
+  <div class="profile-menu" id="profile-menu">
+    <button id="btn-profile" class="avatar-btn" type="button" title="Profil" aria-haspopup="true" aria-expanded="false">
+      <span class="avatar" id="profile-avatar-btn"></span>
+    </button>
+    <div class="profile-dropdown hidden" id="profile-dropdown">
+      <div class="profile-head">
+        <div class="profile-avatar-wrap" id="profile-avatar-wrap" title="Profilbild ändern">
+          <span class="avatar avatar-lg" id="profile-avatar-lg"></span>
+          <span class="avatar-edit-hint">Bild<br/>ändern</span>
+        </div>
+        <div class="profile-head-info">
+          <div class="profile-name" id="profile-name-display">—</div>
+          <div class="profile-email" id="profile-email-display"></div>
+        </div>
+      </div>
+      <label>Anzeigename
+        <input type="text" id="profile-name-input" placeholder="Dein Name" />
+      </label>
+      <input type="file" id="profile-avatar-input" accept="image/*" style="display:none" />
+      <button type="button" id="btn-logout" class="secondary" title="Abmelden" onclick="paLogout()">Abmelden</button>
+    </div>
+  </div>
+</header>
+
+<!-- Aktivitätslog-Overlay -->
+<div id="view-activity" class="act-overlay hidden">
+  <div class="act-panel">
+    <div class="act-head">
+      <div>
+        <strong>Aktivitätslog</strong>
+        <span class="act-sub" id="act-count"></span>
+      </div>
+      <button id="act-close" class="secondary small" title="Schließen">✕</button>
+    </div>
+    <div class="act-filters">
+      <select id="act-filter-project"><option value="">Alle Projekte</option></select>
+      <select id="act-filter-user"><option value="">Alle Benutzer</option></select>
+      <input type="search" id="act-search" placeholder="Suchen: Feld, Wert &hellip;" />
+      <span class="spacer"></span>
+      <button id="act-clear" class="secondary small" title="Gesamtes Log unwiderruflich löschen">Log leeren</button>
+    </div>
+    <div class="act-list" id="act-list"></div>
+  </div>
+</div>
+
+<!-- Vertrag-aus-Vorlage-Overlay -->
+<div id="view-vertrag-fill" class="act-overlay hidden">
+  <div class="act-panel" style="max-width:640px">
+    <div class="act-head">
+      <div>
+        <strong>Vertrag aus Vorlage erzeugen</strong>
+        <span class="act-sub" id="vf-owner-name"></span>
+      </div>
+      <button id="vf-close" class="secondary small" title="Schließen">✕</button>
+    </div>
+    <div class="act-filters">
+      <label style="display:flex;align-items:center;gap:6px;margin:0">Vorlage
+        <select id="vf-vorlage-select" style="min-width:220px"></select>
+      </label>
+    </div>
+    <div class="vt-body" id="vf-fields"></div>
+    <div class="vt-actions">
+      <button type="button" id="vf-generate">Vertrag erzeugen (.docx)</button>
+    </div>
+  </div>
+</div>
+
+<div id="info-pop" class="hidden" role="tooltip"></div>
+
+<div id="view-verfahren" class="act-overlay hidden">
+  <div class="act-panel" style="max-width:720px">
+    <div class="act-head">
+      <div>
+        <strong>Verfahrensweg festlegen</strong>
+        <span class="act-sub">Wie wird die Fläche baurechtlich zulässig?</span>
+      </div>
+      <button id="vw-close" class="secondary small" title="Schließen">✕</button>
+    </div>
+    <div class="vt-body" id="vw-body"></div>
+    <div class="vt-actions">
+      <button type="button" id="vw-uebernehmen">Verfahrensweg übernehmen</button>
+    </div>
+  </div>
+</div>
+
+<div id="view-vertrag" class="act-overlay hidden">
+  <div class="act-panel vtm-panel" role="dialog" aria-modal="true" aria-labelledby="vtm-titel">
+    <div class="act-head">
+      <div><strong id="vtm-titel">Vertrag</strong><span class="act-sub" id="vtm-sub"></span></div>
+      <button type="button" id="vtm-close" class="secondary small" title="Schließen" aria-label="Schließen">✕</button>
+    </div>
+    <div class="vt-body" id="vtm-body"></div>
+    <div class="vt-actions">
+      <button type="button" id="vtm-speichern">Speichern</button>
+      <button type="button" id="vtm-abbrechen" class="secondary">Abbrechen</button>
+      <span class="spacer" style="flex:1"></span>
+      <button type="button" id="vtm-entwurf" class="secondary" title="Pachtvertrag-Muster für den ersten Vertragspartner erzeugen (Reiter Eigentümer)">Vertragsentwurf erzeugen</button>
+      <button type="button" id="vtm-loeschen" class="danger">Löschen</button>
+    </div>
+  </div>
+</div>
+<div id="view-kosten" class="act-overlay hidden">
+  <div class="act-panel vtm-panel" role="dialog" aria-modal="true" aria-labelledby="km-titel">
+    <div class="act-head">
+      <div><strong id="km-titel">Kostenposition</strong><span class="act-sub" id="km-sub"></span></div>
+      <button type="button" id="km-close" class="secondary small" title="Schließen" aria-label="Schließen">✕</button>
+    </div>
+    <div class="vt-body" id="km-body"></div>
+    <div class="vt-actions">
+      <button type="button" id="km-speichern">Speichern</button>
+      <button type="button" id="km-abbrechen" class="secondary">Abbrechen</button>
+      <span class="spacer" style="flex:1"></span>
+      <button type="button" id="km-loeschen" class="danger">Löschen</button>
+    </div>
+  </div>
+</div>
+<div id="view-neu" class="act-overlay hidden">
+  <div class="act-panel" style="max-width:640px">
+    <div class="act-head">
+      <div>
+        <strong>Neues Projekt anlegen</strong>
+        <span class="act-sub">Drei kurze Angaben, dann direkt auf die Karte</span>
+      </div>
+      <button id="np-close" class="secondary small" title="Schließen">✕</button>
+    </div>
+    <div class="vt-body" id="np-body"></div>
+    <div class="vt-actions">
+      <button type="button" id="np-anlegen">Projekt anlegen</button>
+    </div>
+  </div>
+</div>
+
+<div id="view-list" class="view">
+  <div class="list-wrap">
+
+    <aside class="list-side">
+      <div class="side-card">
+        <div class="side-title">Suche &amp; Filter</div>
+        <input type="search" id="project-search" placeholder="Name, Ort, Projekt-ID &hellip;" />
+        <label>Phase
+          <select id="filter-phase"><option value="">Alle Phasen</option></select>
+        </label>
+        <label>Bundesland
+          <select id="filter-land"><option value="">Alle Bundesländer</option></select>
+        </label>
+        <label class="side-check"><input type="checkbox" id="filter-overdue" /> nur überfällige Fristen</label>
+        <label>Sortieren
+          <select id="project-sort">
+            <option value="updated">Zuletzt geändert</option>
+            <option value="name">Name (A–Z)</option>
+            <option value="area">Größe (ha)</option>
+            <option value="status">Status</option>
+            <option value="created">Erstellt</option>
+          </select>
+        </label>
+        <div class="side-label">Ansicht</div>
+        <div class="ansicht-toggle" id="project-ansicht" role="group" aria-label="Darstellung der Projekte">
+          <button type="button" data-ansicht="kacheln" aria-pressed="true">▦ Kacheln</button>
+          <button type="button" data-ansicht="liste" aria-pressed="false">☰ Liste</button>
+        </div>
+        <span class="filter-count" id="filter-count"></span>
+      </div>
+
+    <details id="backup-card" style="margin-top:18px">
+      <summary>Datensicherung &amp; Datei-Sync</summary>
+      <div class="body">
+        <p class="pane-hint" style="margin-top:0">Alle Daten liegen im Browser-Speicher (localStorage). Lade regelmäßig ein Backup herunter — oder verbinde eine Sync-Datei, dann speichert das Tool automatisch zusätzlich in diese Datei (z.&nbsp;B. in einem OneDrive-/Dropbox-Ordner für Geräte-Sync).</p>
+        <div class="btn-row">
+          <button id="btn-backup-export">Backup herunterladen (.json)</button>
+          <button id="btn-backup-import" class="secondary">Backup einspielen &hellip;</button>
+          <input type="file" id="backup-input" accept=".json,application/json" style="display:none" />
+        </div>
+        <div id="filesync-section" style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--border)">
+          <div class="stat" style="margin-bottom:8px"><span>Auto-Speichern in Datei</span><b id="filesync-status">nicht verbunden</b></div>
+          <div class="btn-row">
+            <button id="btn-filesync-load" class="secondary">Aus Datei laden &amp; verbinden</button>
+            <button id="btn-filesync-new" class="secondary">Neue Sync-Datei anlegen</button>
+            <button id="btn-filesync-resume" style="display:none">Datei-Sync reaktivieren</button>
+            <button id="btn-filesync-disconnect" class="danger small" style="display:none">Trennen</button>
+          </div>
+          <p class="pane-hint" style="margin-bottom:0">Bei bestehender Verbindung ist die <b>Datei führend</b>: Beim Öffnen der Seite wird ihr Stand geladen, danach wird jede Änderung automatisch hineingeschrieben.</p>
+        </div>
+        <div id="filesync-unsupported" class="pane-hint" style="display:none;margin-top:10px">Datei-Sync (File System Access API) wird von diesem Browser nicht unterstützt — funktioniert in Chrome und Edge. Backup-Export/-Import funktioniert überall.</div>
+      </div>
+    </details>
+
+    <details id="vorlagen-card" style="margin-top:14px">
+      <summary>Vertragsvorlagen (Word-Muster)</summary>
+      <div class="body">
+        <p class="pane-hint" style="margin-top:0">Word-Vertragsmuster (.docx) hochladen und darin Einsatzfelder wie in einem Serienbrief markieren:
+          im Text an der gewünschten Stelle <code>{{Feldname}}</code> eintippen, z.&nbsp;B. <code>{{Laufzeit}}</code> oder <code>{{Pachtzins}}</code>.
+          Das Tool liest beim Hochladen automatisch alle Felder aus — die lassen sich dann je Vertrag über eine Eingabemaske ausfüllen
+          (Reiter „Grundstück" → „Eigentümer"), ohne wieder in Word zu springen.</p>
+        <div class="btn-row">
+          <button id="btn-vorlage-upload">⬆ Vorlage hochladen &hellip;</button>
+          <input type="file" id="vorlage-upload-input" accept=".docx" style="display:none" />
+        </div>
+        <div id="vorlagen-empty" class="empty">Noch keine Vertragsvorlage hochgeladen.</div>
+        <div id="vorlagen-list"></div>
+      </div>
+    </details>
+    </aside>
+
+    <div class="list-main">
+      <div class="resume-chip" id="resume-chip"></div>
+      <div id="project-list"></div>
+    </div>
+
+    <aside class="list-cal">
+      <!-- Griff zum Verstellen der Spaltenbreite (Maus ziehen, Pfeiltasten, Doppelklick = Standard) -->
+      <div class="cal-resizer" id="cal-resizer" role="separator" aria-orientation="vertical" tabindex="0"
+           aria-label="Breite des Kalenders ändern" title="Ziehen, um die Breite zu ändern · Doppelklick: Standardbreite"></div>
+      <div class="list-cal-inner">
+        <div class="side-card">
+          <div class="side-title">Kalender — alle Projekte</div>
+          <div id="global-kalender"></div>
+        </div>
+        <div class="info" id="fristen-dashboard" style="display:none">
+          <div class="card-head"><strong>Anstehende Fristen</strong><span class="pill" id="fristen-count"></span></div>
+          <div id="fristen-dashboard-list"></div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<div id="view-map" class="view hidden">
+  <div id="map-host-browse" class="map-host" style="flex:1;min-height:0">
+    <div id="main">
+      <div class="geo-search" id="geo-search">
+        <input type="text" id="geo-search-input" placeholder="Adresse oder Ort suchen …" autocomplete="off" />
+        <div id="geo-search-suggestions" class="geo-search-suggestions hidden"></div>
+      </div>
+      <div id="map"></div>
+    </div>
+  </div>
+</div>
+
+<div id="view-detail" class="view hidden">
+  <div class="detail-shell">
+    <nav class="detail-nav" id="detail-nav" aria-label="Projektbereiche">
+      <div class="detail-nav-head">
+        <div class="detail-quickmap" id="detail-quickmap"></div>
+        <div class="detail-nav-title">
+          <textarea id="detail-title" class="detail-title-input" rows="1" placeholder="Projektname" aria-label="Projektname"></textarea>
+          <div style="margin-top:5px" id="detail-phase-badge"></div>
+        </div>
+      </div>
+      <div class="detail-nav-label">Bereiche</div>
+      <div class="detail-tab active" data-dtab="uebersicht"><span class="num">⌂</span><span class="tab-label">Übersicht</span></div>
+      <div class="detail-tab" data-dtab="prozess"><span class="num">1</span><span class="tab-label">Prozess</span><span class="tab-badge" data-badge="prozess"></span></div>
+      <div class="detail-tab" data-dtab="grundstueck"><span class="num">2</span><span class="tab-label">Grundstück</span><span class="tab-badge" data-badge="grundstueck"></span></div>
+      <div class="detail-subnav" data-subnav="grundstueck">
+        <div class="detail-subtab" data-gtab="karte">Karte</div>
+        <div class="detail-subtab" data-gtab="flurstuecke">Flurstücke<span class="sub-count" data-count="flurstuecke"></span></div>
+        <div class="detail-subtab" data-gtab="eigentuemer">Eigentümer<span class="sub-count" data-count="eigentuemer"></span></div>
+        <div class="detail-subtab" data-gtab="anschreiben">Anschreiben</div>
+        <div class="detail-subtab" data-gtab="sicherung">Sicherung</div>
+        <div class="detail-subtab" data-gtab="vertraege">Verträge<span class="sub-count" data-count="vertraege"></span></div>
+      </div>
+      <div class="detail-tab" data-dtab="genehmigung"><span class="num">3</span><span class="tab-label">Genehmigungsplanung</span><span class="tab-badge" data-badge="genehmigung"></span></div>
+      <div class="detail-subnav" data-subnav="genehmigung">
+        <div class="detail-subtab" data-ntab="genehmigung:verfahren">Verfahren</div>
+        <div class="detail-subtab" data-ntab="genehmigung:behoerden">Behörden &amp; Beteiligte<span class="sub-count" data-count="bet-genehmigung"></span></div>
+      </div>
+      <div class="detail-tab" data-dtab="netz"><span class="num">4</span><span class="tab-label">Netz</span><span class="tab-badge" data-badge="netz"></span></div>
+      <div class="detail-subnav" data-subnav="netz">
+        <div class="detail-subtab" data-ntab="netz:planung">Planung &amp; Umspannwerke</div>
+        <div class="detail-subtab" data-ntab="netz:beteiligte">Beteiligte<span class="sub-count" data-count="bet-netz"></span></div>
+      </div>
+      <div class="detail-tab" data-dtab="technik"><span class="num">5</span><span class="tab-label">Technische Planung</span></div>
+      <div class="detail-tab" data-dtab="termine"><span class="num">6</span><span class="tab-label">Termine</span><span class="tab-badge" data-badge="termine"></span></div>
+      <div class="detail-tab" data-dtab="kosten"><span class="num">7</span><span class="tab-label">Kosten</span><span class="tab-badge" data-badge="kosten"></span></div>
+    </nav>
+    <div class="detail-main" id="detail-main">
+  <div class="detail-wrap">
+
+    <div id="dpane-uebersicht" class="detail-pane">
+      <div id="dashboard"></div>
+      <div class="uebersicht-extras">
+          <div class="info" id="prozess-fortschritt-card">
+            <div class="card-head"><strong>Projektfortschritt<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Alle Schritte der zehn Phasen. Manuelle Schritte und Gates (z. B. „Erstprüfung: planbar?&quot;) hier abhaken; gekoppelte Schritte ziehen automatisch aus den Fachreitern mit.">i</button></strong><span id="prozess-progress-label" class="pill phase"></span></div>
+            <div class="prozess-overall-bar"><b id="prozess-overall-bar"></b></div>
+            <div id="prozess-phasen" class="compact"></div>
+          </div>
+        <div class="uebersicht-extras-side">
+          <div class="info" id="prozess-kopf-card">
+            <div class="card-head"><strong>Stammdaten</strong></div>
+            <div class="prozess-kopf" style="grid-template-columns:1fr">
+              <div>
+                <label>Flächenquelle</label>
+                <select id="proz-quelle">
+                  <option value="">— wählen —</option>
+                  <option value="intern">Interne Suche (PD)</option>
+                  <option value="projektierer">Externer Projektierer</option>
+                  <option value="eigentuemer">Eigentümer hat sich gemeldet</option>
+                  <option value="kauf">Kaufprojekt (komplett prüfen!)</option>
+                </select>
+              </div>
+              <div>
+                <label>Vermarktung</label>
+                <select id="proz-vermarktung">
+                  <option value="">— offen —</option>
+                  <option value="EEG">EEG-Projekt</option>
+                  <option value="PPA">PPA-Projekt</option>
+                  <option value="Kombi">Kombi (EEG + PPA)</option>
+                </select>
+              </div>
+              <div>
+                <label>Projekt-ID</label>
+                <div id="proz-projektnummer" class="mono" style="padding:9px 11px;background:#fff;border:1px solid var(--border-strong);border-radius:10px;font-size:13px;font-weight:700;color:var(--text)">—</div>
+              </div>
+            </div>
+            <label style="display:flex;align-items:center;gap:7px;font-weight:600;margin-top:10px">
+              <input type="checkbox" id="proz-abgebrochen" style="width:auto;margin:0" />
+              Projekt zurückgestellt / abgebrochen
+            </label>
+            <div id="proz-abbruch-wrap" style="display:none">
+              <label>Grund / Wiedervorlage</label>
+              <input type="text" id="proz-abbruchgrund" placeholder="z.B. Aufstellungsbeschluss abgelehnt — neuer Versuch nach Kommunalwahl" />
+              
+            </div>
+          </div>
+          <div class="info" id="ordner-card">
+            <div class="card-head"><strong>Datei-Ablage (Projektordner)</strong></div>
+            <p class="pane-hint" style="margin-top:0">Lokalen Ordner für dieses Projekt verbinden: Hochgeladene Dokumente landen automatisch dort — ein Unterordner je Prozessphase, Dateiname = Dokumenttyp. Beim erneuten Hochladen in dasselbe Feld wandert die alte Version mit Zeitstempel in den Unterordner <b>_Archiv</b> direkt neben der Datei.</p>
+            <div id="ordner-status" style="font-size:12px;font-weight:600;margin:0 0 10px;color:var(--muted)">—</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button type="button" class="small" id="btn-ordner-choose">Ordner wählen</button>
+              <button type="button" class="small" id="btn-ordner-grant" style="display:none">Zugriff erlauben</button>
+              <button type="button" class="secondary small" id="btn-ordner-export" style="display:none" title="Alle bereits im Projekt gespeicherten Anhänge jetzt in den Ordner schreiben">Alle Dateien ablegen</button>
+              <button type="button" class="secondary small" id="btn-ordner-disconnect" style="display:none">Trennen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <details class="info" id="gantt-card" style="padding:0">
+        <summary class="gantt-summary"><button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Grundstückssicherung, Gutachten und Genehmigungsplanung bis zur Baugenehmigung. Durchgezogen = erledigt (echte Daten aus den Fachreitern), schraffiert = läuft (Ende offen), gestrichelt = Richtwert (noch keine Daten erfasst).">i</button>
+          <span class="gantt-caret">▸</span>
+          <strong style="font-size:14px">Zeitplan (Gantt)</strong>
+          <span class="spacer" style="flex:1"></span>
+          <button type="button" class="secondary small" id="btn-gantt-pdf" title="Zeitplan als PDF im Querformat drucken/speichern">⭳ PDF (Querformat)</button>
+          <button type="button" class="secondary small" id="btn-gantt-xlsx" title="Zeitplan als Excel-Datei (.xlsx) exportieren">⭳ Excel</button>
+        </summary>
+        <div style="padding:0 16px 16px">
+          
+          <div id="prozess-gantt"></div>
+        </div>
+      </details>
+    </div>
+
+    <div id="dpane-prozess" class="detail-pane hidden">
+      <div style="display:flex;align-items:center;gap:4px;margin:0 0 8px;font-size:12.5px;font-weight:800">Aufgaben &amp; Dokumente<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Arbeitsaufgaben, Gutachten und Dokumente in einer Tabelle. Status je Zeile per Klick weiterschalten (Dokumente: offen → angefragt → erhalten → abgelegt), Dateien direkt anhängen. Eigene Aufgaben und Subelemente je Zeile ergänzen — mit Verantwortlichkeit, Deadline und Priorität. Gekoppelte Fachdaten und der Projektfortschritt in der Übersicht ziehen automatisch mit.">i</button></div>
+      <div id="prozess-tasks"></div>
+    </div>
+
+    <div id="dpane-grundstueck" class="detail-pane hidden">
+      <div class="sub-tabs">
+        <div class="sub-tab active" data-gtab="karte">Karte</div>
+        <div class="sub-tab" data-gtab="flurstuecke">Flurstücke</div>
+        <div class="sub-tab" data-gtab="eigentuemer">Eigentümer</div>
+        <div class="sub-tab" data-gtab="anschreiben">Anschreiben</div>
+        <div class="sub-tab" data-gtab="sicherung">Sicherung</div>
+        <div class="sub-tab" data-gtab="vertraege">Verträge</div>
+      </div>
+
+      <div id="gtab-karte" class="grundstueck-subpane">
+        <div class="grundstueck-layout">
+          <div class="grundstueck-info">
+            <!-- Eine Karte mit Abschnitten statt fünf gestapelter Karten. Technische Werte
+                 (Mittelpunkt, Bounding-Box) liegen im Aufklapper „Technische Details". -->
+            <div class="info gs-panel">
+              <section class="gs-sec">
+                <div class="gs-sec-label">Fläche</div>
+                <div class="gs-area"><b id="stat-area">—</b></div>
+                <div class="gs-sub">Umfang <span id="stat-perim">—</span> · <span id="stat-parts">—</span> Teilfläche(n)</div>
+                <details class="gs-tech">
+                  <summary>Technische Details</summary>
+                  <div class="stat"><span>Fläche in m²</span><b id="stat-area-m2" class="mono">—</b></div>
+                  <div class="stat"><span>Mittelpunkt</span><b id="stat-center" class="mono">—</b></div>
+                  <div class="stat"><span>Bounding-Box</span><b id="stat-bbox" class="mono">—</b></div>
+                </details>
+              </section>
+
+              <section class="gs-sec" id="lage-card">
+                <div class="gs-sec-head">
+                  <span class="gs-sec-label">Lage (ALKIS)</span>
+                  <button id="btn-fetch-lage" class="secondary small">Lage ermitteln</button>
+                </div>
+                <div id="lage-result" class="lage-result">Noch nicht abgefragt. Datenquelle: ALKIS RP/NRW/Berlin + BKG VG250.</div>
+              </section>
+
+              <section class="gs-sec" id="nat-card">
+                <div class="gs-sec-head">
+                  <span class="gs-sec-label">Naturschutz</span>
+                  <button id="btn-naturschutz" class="secondary small">Schutzgebiete prüfen</button>
+                </div>
+                <div id="nat-result" class="lage-result">Noch nicht geprüft. Datenquelle: BfN — prüft Bounding-Box-Überlappung, nicht exakte Polygon-Überschneidung.</div>
+              </section>
+
+              <section class="gs-sec" id="quali-card">
+                <div class="gs-sec-head">
+                  <span class="gs-sec-label">Qualifikation<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Prüfung von LEP, REP, FNP und Schutzgebieten &amp;mdash; selbst im GIS oder über ein Planungsbüro. Ein Klick auf den Status schaltet weiter: offen, ok, Problem. Das Ergebnis speist das Gate „Fläche geeignet?&quot; im Prozess-Reiter.">i</button></span>
+                </div>
+                <div id="quali-checks"></div>
+              </section>
+
+              <section class="gs-sec">
+                <label for="proj-location" class="gs-sec-label">Gemarkung / Adresse / Flur</label>
+                <input type="text" id="proj-location" placeholder="Gemarkung Trier, Flur 12" />
+              </section>
+
+              <section class="gs-sec gs-actions">
+                <button id="btn-download-kmz" class="secondary small">KMZ</button>
+                <button id="btn-download-geojson" class="secondary small">GeoJSON</button>
+                <button id="btn-clear" class="danger small">Flächen löschen</button>
+              </section>
+            </div>
+          </div>
+          <div id="map-host-grundstueck" class="map-host" style="border-radius:14px;overflow:hidden;border:1px solid var(--border)"></div>
+        </div>
+      </div>
+
+      <div id="gtab-flurstuecke" class="grundstueck-subpane hidden">
+        <div class="info">
+          <div class="card-head">
+            <strong>Betroffene Flurstücke<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Wird automatisch aus der ALKIS-Lage-Abfrage befüllt (Reiter „Karte&quot; &amp;rarr; „Lage ermitteln&quot;) oder aus einer Datei importiert. Enthält die Importdatei Eigentümer und Anschrift &amp;mdash; der typische &lt;b&gt;ALB-Auszug&lt;/b&gt; &amp;mdash;, werden die Eigentümer automatisch angelegt, doppelte zusammengeführt und den Flurstücken zugeordnet. Bereits gepflegte Sicherungsdaten bleiben beim erneuten Import erhalten.">i</button></strong>
+            <span style="display:flex;gap:6px;flex-wrap:wrap">
+              <button id="btn-import-flurstuecke" class="small">⬆ ALB / CSV / Excel importieren</button>
+              <button id="btn-flurstuecke-muster" class="secondary small" title="Excel-Vorlage mit allen erkannten Spalten">Musterdatei</button>
+              <button id="btn-flurstuecke-export" class="secondary small" title="Vollständige Flurstücksliste inkl. Eigentümer und Sicherungsstand als Excel">⬇ Liste exportieren</button>
+            </span>
+          </div>
+
+          <div id="flurstuecke-empty" class="empty">Noch keine Flurstücke ermittelt &ndash; im Reiter „Karte" zuerst eine Fläche zeichnen und die Lage ermitteln, oder Flurstücke importieren.</div>
+          <div id="flurstuecke-table-wrap" style="overflow-x:auto"></div>
+        </div>
+        <input type="file" id="flurstuecke-import-input" accept=".csv,.xlsx,.xls" style="display:none" />
+      </div>
+
+      <div id="gtab-eigentuemer" class="grundstueck-subpane hidden">
+        <div class="info">
+          <div class="card-head">
+            <strong>Eigentümer<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Kontaktdaten der Grundstückseigentümer &amp;mdash; Grundlage für &lt;b&gt;Anschreiben&lt;/b&gt; und Pachtverträge. Werden beim ALB-Import automatisch angelegt; die Verknüpfung zu den Flurstücken erfolgt im Reiter „Flurstücke&quot;. Die &lt;b&gt;Anrede&lt;/b&gt; steuert die Briefanrede.">i</button></strong>
+            <button id="btn-add-eigentuemer" class="small">+ Eigentümer</button>
+          </div>
+
+          <div id="eigentuemer-empty" class="empty">Noch keine Eigentümer hinterlegt.</div>
+          <div id="eigentuemer-table-wrap" style="overflow-x:auto"></div>
+          <div id="pachtvertrag-preview"></div>
+        </div>
+      </div>
+
+      <div id="gtab-anschreiben" class="grundstueck-subpane hidden">
+        <div class="info">
+          <div class="card-head">
+            <strong>Eigentümer-Anschreiben<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Serienbrief an die Grundstückseigentümer &amp;mdash; der Schritt &lt;b&gt;„Eigentümer kontaktieren&quot;&lt;/b&gt; aus Phase 4. Empfänger und Flurstücke kommen direkt aus der Flurstücksliste; jeder Brief enthält automatisch die Flurstücke des jeweiligen Eigentümers. Platzhalter in geschweiften Klammern werden je Empfänger ersetzt.">i</button></strong>
+            <span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+              <select id="anschr-vorlage" style="width:auto;min-width:230px;margin:0"></select>
+              <button id="btn-anschr-neu" class="secondary small" title="Eigene Vorlage anlegen">+ Vorlage</button>
+              <button id="btn-anschr-speichern" class="secondary small" title="Änderungen am Text dieser Vorlage sichern">Vorlage speichern</button>
+              <button id="btn-anschr-reset" class="secondary small" title="Vorlage löschen bzw. Standardtext wiederherstellen">Zurücksetzen</button>
+            </span>
+          </div>
+
+          <details class="fold" style="box-shadow:none;margin:6px 0">
+            <summary><span class="fold-title">Verfügbare Platzhalter</span><span class="fold-status" id="anschr-platzhalter-anzahl"></span></summary>
+            <div class="fold-body"><div id="anschr-platzhalter" style="font-size:11.5px;line-height:2"></div></div>
+          </details>
+          <textarea id="anschr-text" rows="16" style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11.5px"></textarea>
+          <div class="card-head" style="margin-top:14px">
+            <strong>Empfänger</strong>
+            <span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+              <label style="display:flex;gap:5px;align-items:center;font-size:11.5px;margin:0">
+                <input type="checkbox" id="anschr-nur-offen" style="width:auto;margin:0" /> nur noch nicht angeschriebene
+              </label>
+              <button id="btn-anschr-alle" class="secondary small">Alle wählen</button>
+              <button id="btn-anschr-keine" class="secondary small">Keine</button>
+            </span>
+          </div>
+          <div id="anschreiben-empty" class="empty">Noch keine Eigentümer mit zugeordneten Flurstücken &ndash; im Reiter „Flurstücke" Eigentümer zuordnen oder eine ALB-Liste importieren.</div>
+          <div id="anschreiben-table-wrap" style="overflow-x:auto"></div>
+          <div class="btn-row" id="anschr-aktionen" style="margin-top:12px">
+            <button id="btn-anschr-serienbrief">⬇ Serienbrief (.docx)</button>
+            <button id="btn-anschr-einzeln" class="secondary">⬇ Einzelne Briefe (.docx)</button>
+            <button id="btn-anschr-markieren" class="secondary" title="Setzt „angeschrieben am“ auf heute und den Vertragsstatus der zugehörigen Flurstücke auf „Eigentümer kontaktiert“">✓ Als angeschrieben markieren</button>
+          </div>
+          <div id="anschreiben-preview"></div>
+        </div>
+      </div>
+
+      <div id="gtab-sicherung" class="grundstueck-subpane hidden">
+        <div class="info">
+          <div class="card-head"><strong>Flächensicherung je Flurstück<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Pacht oder Kauf, Vertragsstatus und &lt;b&gt;Rücktrittsfristen&lt;/b&gt; je Flurstück. Sobald die Rücktrittsfrist verstrichen ist, wird die Fläche gekauft bzw. gepachtet &amp;mdash; wenige Wochen vorher Projektstatus und Realisierbarkeit prüfen. Die Daten hängen an der Flurstücks-ID und überstehen eine Neuabfrage der Lage.">i</button></strong></div>
+
+          <div class="gs-table-summary">
+            <span>Gesichert <b id="sich-stat-quote">—</b> der Fläche</span>
+            <span>Nächste Rücktrittsfrist <b id="sich-stat-frist">—</b></span>
+            <span><b id="sich-stat-anzahl">—</b> Flurstücke</span>
+          </div>
+          <div id="sicherung-empty" class="empty">Noch keine Flurstücke ermittelt &ndash; im Reiter „Karte" zuerst eine Fläche zeichnen und die Lage ermitteln.</div>
+          <div id="sicherung-table-wrap" style="overflow-x:auto"></div>
+        </div>
+      </div>
+
+      <div id="gtab-vertraege" class="grundstueck-subpane hidden">
+        <div class="info">
+          <div class="card-head">
+            <strong>Vertragsmanagement<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Alle Verträge zur Fläche an einer Stelle: Pacht, Kauf, Gestattung (Kabeltrasse), Wegenutzung, Ausgleichsflächen, Reservierung. Der Status wird mit Datum mitgeschrieben; nach der Unterzeichnung stehen die Eckdaten (Laufzeit, Pacht, Reservierung, Zahlungen, Fristen) direkt in der Liste. Pacht- und Kaufverträge halten den Sicherungsstand der zugehörigen Flurstücke automatisch aktuell.">i</button></strong>
+            <span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+              <button type="button" id="btn-vertrag-uebernehmen" class="secondary small hidden">Aus Flächensicherung übernehmen</button>
+              <button type="button" id="btn-vertrag-export" class="secondary small">⬇ Vertragsliste (.xlsx)</button>
+              <button type="button" id="btn-vertrag-neu" class="small">+ Vertrag</button>
+            </span>
+          </div>
+          <div id="vertrag-kpis" class="gs-table-summary"></div>
+          <div id="vertrag-filter" class="vt-filter" role="group" aria-label="Nach Status filtern"></div>
+          <div id="vertrag-empty" class="empty">Noch keine Verträge erfasst. Mit „+ Vertrag" anlegen oder vorhandene Sicherungsdaten der Flurstücke übernehmen.</div>
+          <div id="vertrag-liste"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="dpane-genehmigung" class="detail-pane hidden">
+      <div class="sub-tabs">
+        <div class="sub-tab active" data-ntab="genehmigung:verfahren">Verfahren</div>
+        <div class="sub-tab" data-ntab="genehmigung:behoerden">Behörden &amp; Beteiligte</div>
+      </div>
+
+      <div id="ntab-genehmigung-behoerden" class="hidden">
+      <div class="info">
+        <div class="card-head">
+          <strong>Behörden, Gemeinde und externe Planer</strong>
+          <span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <select id="bet-genehmigung-rolle" style="width:auto;min-width:230px"></select>
+            <button id="bet-genehmigung-add" class="small">+ Anlegen</button>
+          </span>
+        </div>
+        <div id="bet-genehmigung-empty" class="empty">Noch keine Beteiligten erfasst &ndash; oben eine Rolle wählen und anlegen.</div>
+        <div id="bet-genehmigung-list"></div>
+      </div>
+      </div>
+
+      <div id="ntab-genehmigung-verfahren">
+      <details class="fold" id="fold-ueberblick">
+        <summary>
+          <span class="fold-title">Notizen zum Verfahren<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Freitextfelder für Behörde, Verfahrensstand und Termine. Die strukturierten Daten &amp;mdash; Verfahrensweg, Meilensteine, Fristen &amp;mdash; stehen weiter unten und laufen ins Fristen-Dashboard ein; diese vier Felder sind nur für formlose Notizen gedacht.">i</button></span>
+          <span class="fold-status" id="fold-ueberblick-status"></span>
+        </summary>
+        <div class="fold-body">
+        <div class="grid2" style="max-width:none;margin-bottom:0">
+          <div>
+            <label>Wunschtermin / Zeitrahmen</label>
+            <input type="text" id="proj-timeline" placeholder="z.B. Beauftragung Q3 2026, Lieferung bis Q1 2027" style="margin-bottom:0" />
+          </div>
+          <div>
+            <label>Zuständige Behörde</label>
+            <input type="text" id="gen-behoerde" placeholder="z.B. Kreisverwaltung Trier-Saarburg" style="margin-bottom:0" />
+          </div>
+          <div>
+            <label>Verfahrensstand</label>
+            <input type="text" id="gen-verfahrensstand" placeholder="z.B. Antrag eingereicht" style="margin-bottom:0" />
+          </div>
+          <div>
+            <label>Fristen</label>
+            <input type="text" id="gen-fristen" placeholder="z.B. Stellungnahmefrist bis 15.09.2026" style="margin-bottom:0" />
+          </div>
+        </div>
+        </div>
+      </details>
+
+      <div class="section-label">Verfahrensweg</div>
+      <div class="info" id="gen-verfahren-karte"></div>
+
+      <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px">
+        <div style="flex:1;min-width:420px">
+          <!-- Planungsrecht: genau einer dieser Blöcke ist je Verfahrensweg sichtbar -->
+          <div class="info" id="gen-block-bplan" style="margin-bottom:14px">
+            <div class="card-head"><strong>B-Plan-Verfahren (Meilensteine)<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Vom Aufstellungsbeschluss bis zur Genehmigung durch die Landkreisverwaltung. Haken und Datum je Meilenstein; der Prozess-Reiter zieht automatisch mit. Das Verfahren führt der B-Planer, koordiniert wird es vom Bauamt.">i</button></strong></div>
+            <div class="grid2" style="max-width:none">
+              <div><label>B-Planer (Büro / Name)</label><input type="text" id="bplaner-name" placeholder="z.B. Landschaftsarchitektur Muster" /></div>
+              <div><label>B-Planer E-Mail / Telefon</label><input type="text" id="bplaner-kontakt" placeholder="mail@… / 0651 …" /></div>
+            </div>
+            <div id="gen-vbplan-extra" class="grid2" style="max-width:none">
+              <div><label>Durchführungsvertrag geschlossen am</label><input type="date" id="vbplan-dv" /></div>
+              <div><label>Vorhaben- und Erschließungsplan eingereicht am</label><input type="date" id="vbplan-vep" /></div>
+            </div>
+            <div id="bplan-meilensteine"></div>
+          </div>
+
+          <div class="info hidden" id="gen-block-privileg" style="margin-bottom:14px">
+            <div class="card-head"><strong>Privilegierung nachweisen<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Die Privilegierung befreit vom Bauplanungsverbot im Außenbereich &amp;mdash; &lt;b&gt;nicht&lt;/b&gt; von der Baugenehmigung. Die Voraussetzungen sind im Bauantrag zu belegen; die Zahlenwerte unten werden gegen die gesetzlichen Grenzen geprüft.">i</button></strong></div>
+            <label>Privilegierungstatbestand</label>
+            <select id="privileg-art"></select>
+            <div id="privileg-hinweis" class="pane-hint"></div>
+            <div id="privileg-felder" class="grid2" style="max-width:none"></div>
+            <div id="privileg-pruefung"></div>
+            <div id="privileg-rueckbau" class="hidden">
+              <label>Rückbauverpflichtung nach § 35 Abs. 5 BauGB abgegeben am<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Eigene Zulässigkeitsvoraussetzung: die Erklärung, das Vorhaben nach dauerhafter Aufgabe der Nutzung zurückzubauen und Bodenversiegelungen zu beseitigen. Die Behörde soll ihre Einhaltung durch Baulast oder Sicherheitsleistung sichern.">i</button></label>
+              <input type="date" id="rueckbau-am" style="max-width:200px" />
+  
+            </div>
+          </div>
+
+          <div class="info hidden" id="gen-block-bestand" style="margin-bottom:14px">
+            <div class="card-head"><strong>Bestehender Bebauungsplan<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Geprüft wird nur, ob das Vorhaben den Festsetzungen entspricht. Weicht es ab, ist eine Befreiung nach § 31 Abs. 2 BauGB nötig &amp;mdash; sie steht im Ermessen der Behörde und erfordert das Einvernehmen der Gemeinde.">i</button></strong></div>
+            <div class="grid2" style="max-width:none">
+              <div><label>Bezeichnung des B-Plans</label><input type="text" id="bestand-name" placeholder="z.B. B-Plan Nr. 14 „Gewerbepark Ost“" /></div>
+              <div><label>Art der baulichen Nutzung (Festsetzung)</label><input type="text" id="bestand-nutzung" placeholder="z.B. GE / SO Energie" /></div>
+            </div>
+            <label style="display:flex;align-items:center;gap:7px;margin-top:4px">
+              <input type="checkbox" id="bestand-befreiung" style="width:auto;margin:0" />
+              Befreiung nach § 31 Abs. 2 BauGB erforderlich
+            </label>
+            <div id="bestand-befreiung-felder" class="grid2 hidden" style="max-width:none">
+              <div><label>Befreiung beantragt am</label><input type="date" id="bestand-befreiung-am" /></div>
+              <div><label>Befreiung erteilt am</label><input type="date" id="bestand-befreiung-erteilt" /></div>
+            </div>
+          </div>
+
+          <div class="info hidden" id="gen-block-innen" style="margin-bottom:14px">
+            <div class="card-head"><strong>Zulässigkeit im Innenbereich (§ 34 BauGB)<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Maßstab ist das Einfügen in die Eigenart der näheren Umgebung nach Art und Maß der baulichen Nutzung, Bauweise und überbaubarer Grundstücksfläche. Zusätzlich muss die Erschließung gesichert sein.">i</button></strong></div>
+            <div class="grid2" style="max-width:none">
+              <div><label>Prägende Umgebungsbebauung</label><input type="text" id="innen-umgebung" placeholder="z.B. Gewerbebetriebe, Lagerhallen" /></div>
+              <div><label>Erschließung gesichert durch</label><input type="text" id="innen-erschliessung" placeholder="z.B. Anbindung an Industriestraße" /></div>
+            </div>
+          </div>
+
+          <details class="fold hidden" id="gen-block-einvernehmen" style="margin-bottom:0">
+            <summary>
+              <span class="fold-title">Gemeindliches Einvernehmen (§ 36 BauGB)<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Bei Vorhaben nach §§ 31, 33, 34 und 35 BauGB entscheidet die Baugenehmigungsbehörde &lt;b&gt;im Einvernehmen mit der Gemeinde&lt;/b&gt;. Es gilt als erteilt, wenn die Gemeinde nicht binnen zwei Monaten nach Eingang des Ersuchens widerspricht; eine Verweigerung ist nur aus den in §§ 31, 33, 34, 35 genannten Gründen zulässig.">i</button></span>
+              <span class="fold-status" id="gen-block-einvernehmen-status"></span>
+            </summary>
+            <div class="fold-body">
+            <div class="grid2" style="max-width:none">
+              <div><label>Status</label>
+                <select id="einvernehmen-status">
+                  <option value="offen">offen</option>
+                  <option value="ersucht">Ersuchen gestellt</option>
+                  <option value="erteilt">erteilt</option>
+                  <option value="fiktion">als erteilt (2-Monats-Fiktion)</option>
+                  <option value="verweigert">verweigert</option>
+                </select>
+              </div>
+              <div><label>Ersuchen eingegangen am</label><input type="date" id="einvernehmen-am" /></div>
+            </div>
+            <div id="einvernehmen-frist" class="pane-hint"></div>
+            </div>
+          </details>
+        </div>
+
+        <div style="flex:1;min-width:420px">
+          <div class="info" style="margin-bottom:14px">
+            <div class="card-head"><strong>Baugenehmigungsverfahren<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Das Bauordnungsrecht der Länder bestimmt, &lt;b&gt;wie&lt;/b&gt; geprüft wird &amp;mdash; unabhängig davon, über welchen Weg die Fläche planungsrechtlich zulässig geworden ist.">i</button></strong></div>
+            <label>Verfahrensart</label>
+            <select id="bau-art">
+              <option value="">— noch nicht festgelegt —</option>
+              <option value="regulaer">Reguläres Baugenehmigungsverfahren</option>
+              <option value="vereinfacht">Vereinfachtes Baugenehmigungsverfahren</option>
+              <option value="freistellung">Genehmigungsfreistellung</option>
+              <option value="verfahrensfrei">Verfahrensfrei / genehmigungsfrei</option>
+            </select>
+            <div id="bau-art-hint" class="pane-hint" style="display:none"></div>
+            <div id="bau-art-warnung"></div>
+            <div class="grid2" style="max-width:none">
+              <div><label>Unterlagen eingereicht am</label><input type="date" id="bau-eingereicht" /></div>
+              <div><label>Vollständigkeit bestätigt am</label><input type="date" id="bau-vollstaendig" /></div>
+              <div><label>Genehmigung erhalten am</label><input type="date" id="bau-genehmigt" /></div>
+              <div><label>Geplanter Baubeginn</label><input type="date" id="bau-baubeginn" /></div>
+              <div><label>Baubeginnsanzeige eingereicht am<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Eine Woche Frist bis Baubeginn einhalten. Inhalte: Bauherr, Vorhaben, Datum des Baubeginns, Nachweise zu Standsicherheit und Brandschutz, Bauleiter, Unterschrift.">i</button></label><input type="date" id="bau-anzeige" /></div>
+            </div>
+
+          </div>
+
+          <details class="fold" id="gen-block-vorbescheid" style="margin-bottom:14px">
+            <summary>
+              <span class="fold-title">Bauvoranfrage / Vorbescheid<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Klärt einzelne Fragen &amp;mdash; vor allem die &lt;b&gt;planungsrechtliche Zulässigkeit&lt;/b&gt; &amp;mdash; verbindlich, bevor der teure Bauantrag entsteht. Besonders sinnvoll bei Privilegierung und § 34, weil dort das Risiko vor der Flächensicherung liegt. Der Vorbescheid bindet die Behörde je nach Bundesland zwei bis drei Jahre.">i</button></span>
+              <span class="fold-status" id="gen-block-vorbescheid-status"></span>
+            </summary>
+            <div class="fold-body">
+            <label style="display:flex;align-items:center;gap:7px;margin:0 0 4px;font-size:12px">
+              <input type="checkbox" id="vorbescheid-genutzt" style="width:auto;margin:0" /> im Projekt genutzt
+            </label>
+            <div id="vorbescheid-felder" class="hidden">
+              <label>Gegenstand der Voranfrage</label>
+              <input type="text" id="vorbescheid-frage" placeholder="z.B. Planungsrechtliche Zulässigkeit nach § 35 Abs. 1 Nr. 11 BauGB" />
+              <div class="grid2" style="max-width:none">
+                <div><label>Eingereicht am</label><input type="date" id="vorbescheid-eingereicht" /></div>
+                <div><label>Bescheid erhalten am</label><input type="date" id="vorbescheid-erhalten" /></div>
+                <div><label>Ergebnis</label>
+                  <select id="vorbescheid-ergebnis">
+                    <option value="">— offen —</option>
+                    <option value="positiv">positiv</option>
+                    <option value="positiv-auflagen">positiv unter Auflagen</option>
+                    <option value="negativ">negativ</option>
+                  </select>
+                </div>
+                <div><label>Gültig bis</label><input type="date" id="vorbescheid-gueltig" /></div>
+              </div>
+            </div>
+            </div>
+          </details>
+
+          <details class="fold" id="fold-auflagen" style="margin-bottom:0">
+            <summary>
+              <span class="fold-title">Auflagen &amp; Maßnahmen<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="CEF- und Artenschutzmaßnahmen in der Regel &lt;b&gt;vor&lt;/b&gt; Baubeginn, etwa die Umsiedlung von Zauneidechsen. A&amp;amp;E-Maßnahmen folgen oft danach. Ökopunkte sind die Alternative: eine Zahlung an die Gemeinde, die über die Buchhaltung angestoßen wird. Auflagen aus der Baugenehmigung hier miterfassen.">i</button></span>
+              <span class="fold-status" id="fold-auflagen-status"></span>
+            </summary>
+            <div class="fold-body">
+              <div class="btn-row" style="margin-top:0"><button id="btn-add-auflage" class="small">+ Auflage</button></div>
+              <div id="auflagen-list"></div>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <details class="fold" id="fold-fristen">
+        <summary>
+          <span class="fold-title">Fristen<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Frei erfasste Termine. Sie erscheinen zusammen mit Rücktritts-, Auslegungs- und Gutachtenfristen im Fristen-Dashboard auf der Startseite.">i</button></span>
+          <span class="fold-status" id="fold-fristen-status"></span>
+        </summary>
+        <div class="fold-body">
+          <div class="btn-row" style="margin-top:0"><button id="btn-add-frist" class="small">+ Frist</button></div>
+          <div id="fristen-list"></div>
+        </div>
+      </details>
+
+      <details class="fold" id="fold-foerderrahmen">
+        <summary>
+          <span class="fold-title">Förder- und Netzrahmen (EEG / EnWG)<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Baurecht sagt nur, ob gebaut werden darf. Ob das Projekt Geld verdient, entscheiden die Flächenkulisse des § 37 EEG und das Netzanschluss-Regime nach EnWG bzw. KraftNAV.">i</button></span>
+          <span class="fold-status" id="fold-foerderrahmen-status"></span>
+        </summary>
+        <div class="fold-body" id="gen-foerderrahmen"></div>
+      </details>
+
+      <details class="fold" id="fold-gutachten">
+        <summary>
+          <span class="fold-title">Gutachten<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Welche Fachgutachten dieses Projekt braucht, bei wem sie liegen und was sie kosten. Die immer erforderlichen sind vorbelegt; situationsabhängige wie Blend, Schall oder Denkmal nimmst du bei Bedarf dazu. Der Status kommt aus den Dokumenten im Prozess-Reiter &amp;mdash; ein dort hochgeladenes Gutachten erscheint hier automatisch als „erhalten&quot;.">i</button></span>
+          <span class="fold-status" id="fold-gutachten-status"></span>
+        </summary>
+        <div class="fold-body">
+          <div class="card-head" style="margin-top:0">
+            <div class="kpis" style="grid-template-columns:repeat(4,1fr);flex:1;max-width:640px;margin:0">
+              <div class="kpi"><span>Erforderlich</span><b id="gut-stat-erforderlich">—</b></div>
+              <div class="kpi"><span>Beauftragt</span><b id="gut-stat-beauftragt">—</b></div>
+              <div class="kpi"><span>Erhalten</span><b id="gut-stat-erhalten">—</b></div>
+              <div class="kpi"><span>Honorar</span><b id="gut-stat-honorar">—</b></div>
+            </div>
+            <span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+              <select id="gutachten-add" style="width:auto;min-width:190px"></select>
+              <button id="btn-gutachten-add" class="small">+ Aufnehmen</button>
+              <button id="btn-gutachten-export" class="secondary small" title="Gutachtenliste als Excel">⬇ Excel</button>
+            </span>
+          </div>
+          <div id="gutachten-table-wrap" style="overflow-x:auto"></div>
+        </div>
+      </details>
+
+      <details class="fold" id="fold-gutachterinfo">
+        <summary>
+          <span class="fold-title">Zusatzinfos für Gutachter<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Freitext, der in die erzeugten Anfrage-Mails übernommen wird: Besonderheiten, Vornutzung, bekannte Restriktionen.">i</button></span>
+          <span class="fold-status" id="fold-gutachterinfo-status"></span>
+        </summary>
+        <div class="fold-body">
+          <textarea id="proj-notes" placeholder="Besonderheiten, Vornutzung, bekannte Restriktionen ..." style="margin-bottom:0"></textarea>
+        </div>
+      </details>
+
+      <details>
+        <summary>Gutachten-Anfragen</summary>
+        <div class="body">
+          <p class="pane-hint">Lege je Gutachten-Kategorie ein oder mehrere Büros mit E-Mail-Adresse an und erzeuge fertige Anfrage-Mails &ndash; inklusive Flächendaten, Koordinaten, Lage und Naturschutz-Vorscan.</p>
+          <div class="btn-row">
+            <button id="btn-add-type">+ Gutachten-Typ</button>
+            <button id="btn-reset-types" class="secondary small">Standard wiederherstellen</button>
+          </div>
+          <div id="contacts-list"></div>
+          <div class="btn-row" style="margin-top:16px">
+            <button id="btn-generate-all">Alle Anfragen erzeugen</button>
+            <button id="btn-open-all" class="secondary">Alle in Outlook öffnen</button>
+          </div>
+          <div id="requests-list"></div>
+          <details style="margin-top:10px">
+            <summary>Hinweis zu Mail-Anhängen</summary>
+            <div class="body">Mailto-Links können technisch keine Dateien automatisch anhängen. Lade die KMZ herunter und hänge sie nach dem Öffnen in Outlook an die generierte Mail an. Die wichtigsten Eckdaten (Mittelpunkt, Fläche, Bounding-Box, Koordinaten) stehen bereits im Mailtext.</div>
+          </details>
+        </div>
+      </details>
+
+      <details style="margin-top:10px">
+        <summary>Absender-Einstellungen</summary>
+        <div class="body">
+          <label>Dein Name</label>
+          <input type="text" id="me-name" placeholder="Vorname Nachname" />
+          <label>Firma</label>
+          <input type="text" id="me-company" placeholder="z.B. PORTA-PV" />
+          <label>Straße + Nr. (Briefkopf)</label>
+          <input type="text" id="me-strasse" placeholder="z.B. Musterstr. 1" />
+          <div class="row2">
+            <div><label>PLZ</label><input type="text" id="me-plz" /></div>
+            <div><label>Ort</label><input type="text" id="me-ort" /></div>
+          </div>
+          <label>Telefon</label>
+          <input type="text" id="me-phone" />
+          <label>E-Mail (deine Absenderadresse, zur Info im Footer)</label>
+          <input type="email" id="me-email" />
+          <label>Mail-Signatur (frei)</label>
+          <textarea id="me-signature" placeholder="z.B. Mit freundlichen Grüßen&#10;..."></textarea>
+          <div class="btn-row">
+            <button id="btn-save-sender">Speichern</button>
+          </div>
+        </div>
+      </details>
+      </div>
+    </div>
+
+    <div id="dpane-netz" class="detail-pane hidden">
+      <div class="sub-tabs">
+        <div class="sub-tab active" data-ntab="netz:planung">Planung &amp; Umspannwerke</div>
+        <div class="sub-tab" data-ntab="netz:beteiligte">Beteiligte</div>
+      </div>
+
+      <div id="ntab-netz-beteiligte" class="hidden">
+      <div class="info">
+        <div class="card-head">
+          <strong>Netzbetreiber und Bau-Beteiligte</strong>
+          <span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <select id="bet-netz-rolle" style="width:auto;min-width:230px"></select>
+            <button id="bet-netz-add" class="small">+ Anlegen</button>
+          </span>
+        </div>
+        <div id="bet-netz-empty" class="empty">Noch keine Beteiligten erfasst.</div>
+        <div id="bet-netz-list"></div>
+      </div>
+      </div>
+
+      <div id="ntab-netz-planung">
+      <div class="netz-layout">
+        <div class="netz-info">
+          <div class="section-label">Anschluss</div>
+          <div class="info">
+            <div class="grid2" style="max-width:none;margin-bottom:0">
+              <div>
+                <label>Netzbetreiber</label>
+                <input type="text" id="netz-betreiber" placeholder="z.B. Westnetz GmbH" style="margin-bottom:0" />
+              </div>
+              <div>
+                <label>Anschlusspunkt</label>
+                <input type="text" id="netz-anschlusspunkt" placeholder="z.B. UW Musterstadt, Abgang 3" style="margin-bottom:0" />
+              </div>
+              <div>
+                <label>Anschlussleistung</label>
+                <input type="text" id="netz-anschlussleistung" placeholder="z.B. 10 MW" style="margin-bottom:0" />
+              </div>
+              <div>
+                <label>Status</label>
+                <input type="text" id="netz-status" placeholder="z.B. Netzanschlussanfrage gestellt" style="margin-bottom:0" />
+              </div>
+            </div>
+          </div>
+
+          <div class="info" id="netz-prozess-card">
+            <div class="card-head"><strong>NVP &amp; Trasse (Prozess)</strong></div>
+            <div class="grid2" style="max-width:none">
+              <div>
+                <label>ANA gestellt am</label>
+                <input type="date" id="netz-ana" />
+              </div>
+              <div>
+                <label>NVP-Status</label>
+                <select id="netz-nvp-status"></select>
+              </div>
+              <div>
+                <label>Trassen-Status</label>
+                <select id="netz-trasse-status"></select>
+              </div>
+              <div>
+                <label>Trassen-Notiz</label>
+                <input type="text" id="netz-trasse-notiz" placeholder="z.B. überwiegend öffentliche Wege" />
+              </div>
+            </div>
+            
+          </div>
+
+          <div class="section-label">Umspannwerk-Vergleich</div>
+          <div class="info" id="uw-vergleich-card">
+            <div class="card-head"><strong>Umspannwerk-Vergleich</strong></div>
+
+            <label>Anlagenleistung für Kapazitätsprüfung (MW)</label>
+            <input type="number" id="netz-leistung-mw" step="0.1" min="0" placeholder="z.B. 12" style="max-width:160px" />
+
+            <label style="margin-top:10px">Such-Trassenlänge: <span id="uw-radius-val">15</span> km</label>
+            <input type="range" id="uw-radius" min="1" max="50" value="15" style="margin-bottom:13px" />
+
+            <label>Mindest-Spannungsebene</label>
+            <div class="btn-row" id="uw-minkv-toggle">
+              <button type="button" class="secondary small" data-kv="110">&ge;110 kV</button>
+              <button type="button" class="secondary small" data-kv="220">&ge;220 kV</button>
+              <button type="button" class="secondary small" data-kv="380">&ge;380 kV</button>
+            </div>
+
+            <label style="display:flex;align-items:center;gap:6px;margin-top:2px;font-weight:500">
+              <input type="checkbox" id="uw-nur-kapazitaet" style="width:auto;margin:0" /> Nur mit ausreichender Kapazität
+            </label>
+
+            <label style="margin-top:10px">Sortierung</label>
+            <select id="uw-sort">
+              <option value="luftlinie">Luftlinie (nächste zuerst)</option>
+              <option value="kosten">Geschätzte Kosten (günstigste zuerst)</option>
+              <option value="kapazitaet">Freie Kapazität (meiste zuerst)</option>
+            </select>
+
+            <div id="uw-vergleich-empty" class="pane-hint" style="margin-top:10px">Noch keine Fläche gezeichnet oder keine Umspannwerke hinterlegt.</div>
+            <div id="uw-vergleich-table-wrap" style="margin-top:10px;overflow-x:auto"></div>
+
+            <details style="margin-top:10px">
+              <summary>Kostensätze &amp; Annahmen</summary>
+              <div class="body">
+                <table class="vergleich-table">
+                  <tr><th>Spannungsebene</th><th>EUR / Trassenmeter</th></tr>
+                  <tr><td>20 kV</td><td class="mono">250 €</td></tr>
+                  <tr><td>110 kV</td><td class="mono">500 €</td></tr>
+                  <tr><td>220 kV</td><td class="mono">800 €</td></tr>
+                  <tr><td>380 kV</td><td class="mono">1.200 €</td></tr>
+                  <tr><td>sonstige</td><td class="mono">400 €</td></tr>
+                </table>
+                <p style="margin-top:8px">Geschätzte Trassenlänge = Luftlinie &times; Korrekturfaktor (1,3 &ndash; pauschal für Umwege durch Grundstücksgrenzen, Stra&szlig;en etc.).</p>
+              </div>
+            </details>
+          </div>
+
+          <div class="section-label">Verwaltung (projektübergreifend)</div>
+          <details style="margin-top:0">
+            <summary>Umspannwerke verwalten (global)</summary>
+            <div class="body">
+              
+              <div class="btn-row">
+                <button id="btn-add-uw">+ Umspannwerk</button>
+              </div>
+              <div id="uw-list"></div>
+            </div>
+          </details>
+
+          <details style="margin-top:10px">
+            <summary>Hochspannungsleitungen (OSM-Overlay)</summary>
+            <div class="body">
+              
+              <div class="btn-row">
+                <button id="btn-load-osm-lines" class="secondary">Leitungen im Ausschnitt laden</button>
+                <button id="btn-clear-osm-lines" class="secondary">Leitungen ausblenden</button>
+              </div>
+            </div>
+          </details>
+        </div>
+        <div id="map-host-netz" class="map-host" style="border-radius:14px;overflow:hidden;border:1px solid var(--border)"></div>
+      </div>
+      </div>
+    </div>
+
+    <div id="dpane-technik" class="detail-pane hidden">
+      <div class="section-label">Technische Eckdaten</div>
+      <div class="info">
+        <label style="margin-top:0">Geplante Anlagenleistung</label>
+        <div class="grid2">
+          <div>
+            <label>Leistung DC (kWp)</label>
+            <input type="number" id="proj-power-dc" placeholder="z.B. 18400" step="any" />
+          </div>
+          <div>
+            <label>Leistung AC (kW)</label>
+            <input type="number" id="proj-power-ac" placeholder="z.B. 15200" step="any" />
+          </div>
+        </div>
+        <div class="grid2" style="max-width:none">
+          <div>
+            <label>Anlagentyp</label>
+            <input type="text" id="tech-anlagentyp" placeholder="z.B. Freiflächen-PV" />
+          </div>
+          <div>
+            <label>Geplante Module</label>
+            <input type="text" id="tech-module" placeholder="z.B. 18.000 x 460 Wp" />
+          </div>
+          <div>
+            <label>Wechselrichter</label>
+            <input type="text" id="tech-wechselrichter" placeholder="z.B. 6 x Zentralwechselrichter 1.500 kW" />
+          </div>
+        </div>
+        <label>Bemerkungen</label>
+        <textarea id="tech-bemerkungen" placeholder="Sonstige technische Hinweise ..." style="margin-bottom:0"></textarea>
+      </div>
+    </div>
+
+    <div id="dpane-termine" class="detail-pane hidden">
+      <div>
+        <div class="info">
+          <div class="card-head"><strong>Projektkalender</strong></div>
+          
+          <div id="projekt-kalender"></div>
+        </div>
+        <div class="info">
+          <div class="card-head"><strong>Kommunikationslog</strong><button id="btn-add-komm" class="small" style="margin:0">+ Eintrag</button></div>
+          
+          <div id="komm-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="dpane-kosten" class="detail-pane hidden">
+      <div class="kosten-drop-hint" aria-hidden="true">Dateien loslassen, um sie als Beleg zu erfassen</div>
+      <div class="info" id="kosten-kopf">
+        <div class="card-head">
+          <strong>Kostenübersicht<button type="button" class="info-btn" aria-expanded="false" aria-label="Erläuterung anzeigen" data-info="Alle Rechnungen, Quittungen und &lt;b&gt;Kostenbescheide&lt;/b&gt; der Behörden zu diesem Projekt, jeweils mit dem Beleg als Datei. Die spezifischen Kosten werden aus den &lt;b&gt;Nettobeträgen&lt;/b&gt; gerechnet (Umsatzsteuer ist in der Regel Vorsteuer): Summe netto geteilt durch die Leistung DC in kWp bzw. AC in kW. Die Leistung ist dieselbe wie im Reiter „Technische Planung&quot;.">i</button></strong>
+          <span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <button type="button" id="btn-kosten-upload" class="small">⬆ Beleg hochladen</button>
+            <button type="button" id="btn-kosten-neu" class="secondary small">+ Kostenposition</button>
+            <button type="button" id="btn-kosten-export" class="secondary small" title="Belege und Übersicht als Excel-Datei">⬇ Excel</button>
+          </span>
+        </div>
+        <div class="kosten-bezug">
+          <span class="kosten-bezug-label">Bezugsleistung</span>
+          <label>DC <input type="number" id="kosten-kwp" step="any" min="0" placeholder="kWp" aria-label="Leistung DC in kWp" /> kWp</label>
+          <label>AC <input type="number" id="kosten-kw" step="any" min="0" placeholder="kW" aria-label="Leistung AC in kW" /> kW</label>
+        </div>
+        <div id="kosten-kpis" class="kpis kosten-kpis"></div>
+      </div>
+
+      <div class="info" id="kosten-kat-card">
+        <div class="card-head"><strong>Nach Kategorie</strong><span class="kosten-hinweis">Zeile anklicken, um die Belege zu filtern</span></div>
+        <div id="kosten-kategorien"></div>
+      </div>
+
+      <div class="info" id="kosten-belege-card">
+        <div class="card-head">
+          <strong>Belege und Kostenbescheide</strong>
+          <input type="search" id="kosten-suche" placeholder="Suchen: Aussteller, Nummer, Text …" />
+        </div>
+        <div id="kosten-filter" class="vt-filter" role="group" aria-label="Belege filtern"></div>
+        <div id="kosten-empty" class="empty">Noch keine Kosten erfasst. „⬆ Beleg hochladen“ legt aus einer Rechnung oder einem Kostenbescheid (PDF, Foto) eine Position an — Dateien lassen sich auch einfach hierher ziehen.</div>
+        <div id="kosten-liste"></div>
+      </div>
+    </div>
+  </div>
+    </div>
+  </div>
+</div>
+
+<div id="save-toast">✓ gespeichert</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+<script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/pizzip@3.1.6/dist/pizzip.min.js"></script>
+<script src="https://unpkg.com/docxtemplater@3.69.0/build/docxtemplater.min.js"></script>
+
+<script src="js/00-hilfsfunktionen.js"></script>
+<script src="js/01-zustand.js"></script>
+<script src="js/02-aktivitaet.js"></script>
+<script src="js/03-profil.js"></script>
+<script src="js/04-umspannwerke.js"></script>
+<script src="js/05-karte.js"></script>
+<script src="js/06-projektfelder-anfragen.js"></script>
+<script src="js/07-navigation.js"></script>
+<script src="js/08-grundstueck-pachtvertrag.js"></script>
+<script src="js/08b-vertragsmanagement.js"></script>
+<script src="js/09-anschreiben-vorlagen.js"></script>
+<script src="js/10-dokumente.js"></script>
+<script src="js/11-projektordner.js"></script>
+<script src="js/12-zeitplan.js"></script>
+<script src="js/13-dashboard.js"></script>
+<script src="js/14-prozess-aufgaben.js"></script>
+<script src="js/15-genehmigung.js"></script>
+<script src="js/16-foerderung-beteiligte.js"></script>
+<script src="js/16b-kosten.js"></script>
+<script src="js/17-fristen-termine.js"></script>
+<script src="js/18-projektliste.js"></script>
+<script src="js/19-sicherung-sync.js"></script>
+<script src="js/20-flurstueck-import.js"></script>
+<script src="js/21-benachrichtigungen.js"></script>
+</body>
+</html>
